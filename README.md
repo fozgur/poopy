@@ -1,80 +1,148 @@
-# POOPY NANO 3 — Sütlaç logbook
+# POOPY NANO 3 — a litter box logbook
 
-Tuya kumluğunun olaylarını toplar, ziyaret/temizlik/tartım türetir, telefondan
-açılan bir web arayüzünde gösterir. Mac'e bağımlı değil: veriyi GitHub Actions
-Tuya Cloud'dan çekiyor, arayüzü Cloudflare Pages servis ediyor.
+A Tuya-based cat litter box records every visit, weighs the cat on the way in,
+and runs its own cleaning cycles — and then shows you almost none of it. The
+vendor app gives a live status screen and no history worth the name.
 
-## Nasıl çalışıyor
+This project keeps the history. It collects the device's raw datapoint changes,
+derives visits, cleaning cycles and weights from them, and serves a small web
+page you add to your phone's home screen.
 
-    GitHub Actions (15 dk'da bir)  ->  poll.py  ->  events.jsonl + api/data.json
-                                                          |
-                                                    git push
-                                                          |
-                                            Cloudflare Pages  ->  telefon
+**Live:** https://fozgur.github.io/poopy/
 
-`poll.py` Tuya Cloud'un ~4 günlük kayan penceresini okuyup `events.jsonl`'e
-birleştirir. Pencere 4 gün, cron 15 dakika — Actions birkaç çalıştırmayı atlasa
-bile veri kaybı olmaz.
+There is no server and no database engine. The event log is a file in this repo,
+git is the storage layer, GitHub Actions is the cron, and GitHub Pages is the
+host. Nothing needs to stay switched on at home.
 
-## Kurulum
+## How it works
 
-1. **Repo:** bu klasörü GitHub'a push et. `config.json` / `cloud.json`
-   gitignore'da, gitmeyecek.
-2. **Actions secrets** (Settings → Secrets → Actions), `cloud.json` ve
-   `config.json` içindeki değerler:
-   `TUYA_REGION`, `TUYA_KEY`, `TUYA_SECRET`, `TUYA_DEVICE`
-3. **Cloudflare Pages:** Workers & Pages → Create → Pages → repoyu bağla.
-   Build command boş, output directory `/`. URL: `<proje>.pages.dev`
-4. **Telefon:** URL'yi aç → Paylaş → Ana Ekrana Ekle. Tam ekran açılır, offline'da
-   son veriyi gösterir.
+```
+GitHub Actions (every 6 min)
+        |
+     poll.py  <--  Tuya Cloud API  (~4 day rolling window)
+        |
+   events.jsonl  +  api/data.json
+        |
+    git push  (only when the device actually reported something)
+        |
+   GitHub Pages  -->  index.html on your phone
+```
 
-Actions cron'u ilk push'tan sonra kendi başlar; `workflow_dispatch` ile elle de
-tetiklenir.
+`poll.py` reads the cloud's rolling window and merges it into `events.jsonl`,
+an append-only log of every datapoint change. The merge is idempotent: re-reading
+an overlapping window produces a byte-identical file, so a run with no new device
+activity commits nothing and triggers no deploy. Deploys are proportional to how
+often the cat uses the box, not to the clock.
 
-## Yerel çalıştırma
+The window is four days and the cron is six minutes, so Actions can skip a good
+number of runs — it often does under load — without losing anything.
 
-    ./venv/bin/python poll.py            # bulutu çek, api/data.json üret
-    ./venv/bin/python logbook.py         # http://localhost:8420
-    ./venv/bin/python watch.py           # OPSİYONEL, LAN dinleyici
+### Why not just read the device directly?
 
-`watch.py` sadece bulutta olmayan iki DP için (`101 cleaning`, `124 clean_count`).
-Mac'te açık olursa `events.jsonl`'e onları da yazar; olmazsa arayüzde temizlik
-sayacı eskide kalır, gerisi çalışır.
+The box speaks the local Tuya protocol over the LAN, so a listener has to sit on
+the same network. That was the original design (`watch.py`, still here) and it
+meant a laptop at home had to stay awake forever. Everything the UI shows can be
+derived from the five datapoints Tuya's cloud logs, so the cloud path replaced it
+and the home dependency went away.
 
-## Dosyalar
+The trade is two vendor datapoints the cloud never logs: `101 cleaning` and
+`124 clean_count`. Run `watch.py` on the LAN if you want those; nothing else
+depends on it.
 
-| dosya | ne |
+## Setup
+
+For your own device, you need a Tuya IoT Platform account with the device linked
+to a cloud project.
+
+1. Fork or copy this repo.
+2. Add four repository secrets under **Settings → Secrets and variables → Actions**:
+
+   | secret | value |
+   |---|---|
+   | `TUYA_REGION` | `eu`, `us`, `cn` … |
+   | `TUYA_KEY` | cloud project access ID |
+   | `TUYA_SECRET` | cloud project access secret |
+   | `TUYA_DEVICE` | the device id |
+
+3. Set `TZ` in [`.github/workflows/poll.yml`](.github/workflows/poll.yml) to your
+   own zone. The cloud returns epoch milliseconds and the log stores naive local
+   time; converting into the wrong zone makes every cloud row a time-shifted
+   duplicate of a row you already have.
+4. **Settings → Pages → Deploy from a branch → `main` / `(root)`**.
+5. Open the site on your phone, Share → Add to Home Screen.
+
+The schedule starts itself after the first push. `workflow_dispatch` runs it by
+hand from the Actions tab.
+
+## Running locally
+
+```sh
+python poll.py          # pull the cloud window, rebuild events.jsonl + api/data.json
+python logbook.py       # preview at http://localhost:8420
+python test_poopy.py    # self-check
+python watch.py         # OPTIONAL, LAN listener, needs config.json
+```
+
+`poll.py` and `logbook.py` need only `tinytuya`.
+
+Note that `api/data.json` is generated and rewritten by CI. If you run `poll.py`
+locally you will collide with the bot on the next pull — treat the file as build
+output and `git checkout -- api/data.json` before pulling.
+
+## Files
+
+| file | what |
 |---|---|
 | `poll.py` | Tuya Cloud → `events.jsonl` → `api/data.json` |
-| `logbook.py` | türetme kuralları + olay deposu + yerel önizleme sunucusu |
-| `watch.py` | opsiyonel LAN dinleyici (üretici DP'leri için) |
-| `events.jsonl` | ham olay logu, tek veri kaynağı |
-| `api/data.json` | arayüzün okuduğu türetilmiş çıktı |
-| `index.html`, `sw.js`, `manifest.json` | arayüz (PWA) |
-| `cutout.py` | `sutlac.jpeg` → fonu şeffaf `sutlac.png` + `favicon.png`; fotoğraf değişirse tekrar çalıştır |
-| `config.json`, `cloud.json` | cihaz ve bulut anahtarları — gitignore'da |
+| `logbook.py` | derivation rules, event store, local preview server |
+| `watch.py` | optional LAN listener, for the vendor-only datapoints |
+| `test_poopy.py` | self-check for the merge and the derivation |
+| `events.jsonl` | raw event log — the single source of truth |
+| `api/data.json` | derived output, the only thing the page reads |
+| `index.html`, `sw.js`, `manifest.json` | the UI, installable as a PWA |
+| `cutout.py` | one-off: `sutlac.jpeg` → transparent `sutlac.png` / `favicon.png` |
+| `config.json`, `cloud.json` | device and cloud credentials — gitignored |
 
-## Türetme kuralları
+## Derivation rules
 
-| ne | nereden |
+| what | from |
 |---|---|
-| ziyaret | `7` (excretion_times_day) her arttığında |
-| **birleşik ziyaret** | `MERGE_GAP` (120 sn) içindeki ardışık girişler tek ziyaret; süreler toplanır, giriş sayısı `parts` alanında |
-| kalma süresi | o andaki `8` (excretion_time_day) |
-| tartım | o andaki `6` (cat_weight) |
-| temizlik | `24` (status) `clean`'e girip çıktığında |
+| visit | every increase of `7` (`excretion_times_day`) |
+| **merged visit** | consecutive entries within `MERGE_GAP` (240 s) count as one; durations add up, the entry count lands in `parts` |
+| duration | `8` (`excretion_time_day`) as of that moment |
+| weight | `6` (`cat_weight`) as of that moment |
+| cleaning cycle | `24` (`status`) entering and then leaving `clean` |
 
-Arayüzdeki her sayı **birleşik ziyaret** üzerinden. Sütlaç girip çıkıp giriyor;
-cihazın kendi sayacı bunları ayrı sayıyor (bugün 4), birleştirince gerçek ziyaret
-sayısı çıkıyor (2). Süre grafiğinde **içi boş halka = girdili çıktılı ziyaret**.
+Every number in the UI is a **merged** visit. The cat walks in, out, and back in;
+the device's own counter reads that as three visits. In the duration chart a
+**hollow ring marks a visit that was stitched together** from several entries.
 
-## Bilinen sınırlar
+Two subtleties that cost real debugging, in case you build something similar:
 
-- **Bulut sadece 5 DP logluyor** (6/7/8/22/24). Türetme için hepsi yeterli;
-  `101`/`124` yalnızca `watch.py` açıkken gelir.
-- **Ağırlık gürültülü.** Aynı kedi için 1.0–3.2 kg okumalar geliyor. Arayüz
-  medyan gösteriyor. Kalibrasyon: `logbook.py` içindeki `W_SCALE` / `W_OFFSET`.
-- **Kum ağırlığı yok.** Cihazda kumu tartan DP yok; gram ölçümü için harici
-  kantar (ESP32 + HX711) gerekir.
-- **Site açık.** URL'yi bilen görür. Kapatmak istersen Cloudflare Access
-  (Zero Trust free tier) ile iki e-postaya kilitlenir.
+- Datapoints that belong to one event arrive with the same timestamp. `7` and `8`
+  land together, and if you apply them one at a time in datapoint order, every
+  visit reports the *previous* visit's duration and weight. `derive()` applies a
+  whole timestamp batch before deriving anything from it.
+- Two events can share a timestamp *and* a datapoint — a status flicker inside one
+  second. Deduplicating those through a `set()` leaves their order up to the
+  process hash seed, which rewrites the file on every run and produces an endless
+  stream of empty commits.
+
+## Known limits
+
+- **The cloud logs five datapoints** (6/7/8/22/24) for four days. Enough for
+  everything above; `101`/`124` need `watch.py` on the LAN.
+- **The weight is noisy.** The same cat reads anywhere from 1.0 to 3.2 kg, so the
+  headline figure is a median. `6` is a raw load-cell value and the vendor's own
+  kilogram figure is wrong, so calibrate `W_SCALE` / `W_OFFSET` in `logbook.py`
+  against a known weight rather than trusting either.
+- **No litter weight.** No datapoint tracks the litter itself; sampling a full
+  cleaning cycle at 2-second intervals moved no mass signal at all. Measuring it
+  needs an external scale under the box (ESP32 + HX711).
+- **Eleven vendor datapoints are still unnamed** (`102,104,105,114,117,118,121,
+  123,125,126,127`). Run `watch.py`, change a setting in the app, and watch which
+  number moves.
+- **This repo is public, so the data is.** Making it private would take Pages with
+  it — private repositories need a paid plan to publish. Cloudflare Pages deploys
+  from a private repo on its free tier, but its 500-builds-per-month limit means
+  the data has to be fetched from somewhere other than the build output.
