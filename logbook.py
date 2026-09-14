@@ -11,7 +11,8 @@ NAMES = {
     22: "fault", 24: "status",
     116: "weight_unit", 131: "litter_type",
     101: "cleaning", 124: "clean_count", 128: "cycle_end_flag",
-}
+    104: "cat_inside",   # presence flag; kenarları dp7/dp8 ile birebir uyuyor.
+}                        # Sadece watch.py (LAN) görüyor, bulutta yok.
 
 # ponytail: dp6 is a raw load-cell reading; the app's own kg figure is wrong, so
 # don't trust the vendor scaling. Tune these against a known weight.
@@ -22,16 +23,26 @@ W_SCALE, W_OFFSET = 0.1, 0.0
 # 4 dakika: 2 dakikayla bazı girdili çıktılı seriler ayrı ziyaret olarak kalıyordu.
 MERGE_GAP = 240
 
-def rows():
-    if not os.path.exists(EVENTS):
+# ponytail: bir ziyaretin toplamı bu kadarsa kedi girip çıkmış, işini görmemiş.
+# 161 olayda en kısa gerçek ziyaret 13 sn; eşik davranış verisi biriktikçe oynar.
+SHORT_STAY = 10
+
+def read_jsonl(path):
+    if not os.path.exists(path):
         return []
-    with open(EVENTS) as f:
+    with open(path) as f:
         return [json.loads(l) for l in f if l.strip()]
 
-def write_rows(rs):
-    with open(EVENTS, "w") as f:
+def write_jsonl(path, rs):
+    with open(path, "w") as f:
         for r in rs:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+def rows():
+    return read_jsonl(EVENTS)
+
+def write_rows(rs):
+    write_jsonl(EVENTS, rs)
 
 def append_row(r):
     with open(EVENTS, "a") as f:
@@ -39,16 +50,16 @@ def append_row(r):
 
 def derive(evs):
     """visits: dp7 increments. cleans: dp24 entering/leaving "clean" — that DP is
-    in the cloud history too, so cycles predate local watching (dp101/dp124 are
-    local-only)."""
+in the cloud history too, so cycles predate local watching (dp101/dp124 are
+local-only)."""
     visits, cleans, weights, cur, clean_start = [], [], [], {}, None
     for _, batch in groupby(evs, key=lambda e: e["ts"]):
-        # ponytail: dp7 and dp8 arrive in the same second. Apply the whole
-        # batch to cur before deriving, or a visit reads the *previous*
-        # visit's duration and weight.
+        # ponytail: dp6/7/8 arrive in one payload with one timestamp. Fold the
+        # whole batch into cur first, then read it — otherwise dp7 is handled
+        # before dp8 lands and every visit gets the previous visit's duration.
         fresh = []
         for e in batch:
-            if e["old"] is None and e["dp"] in cur:   # replay after a restart
+            if e["old"] is None and e["dp"] in cur:   # watcher restart replay
                 cur[e["dp"]] = e["new"]
                 continue
             cur[e["dp"]] = e["new"]
@@ -75,7 +86,7 @@ def derive(evs):
 
 def sessions(visits, gap=MERGE_GAP):
     """Ard arda gelen girişleri tek ziyarete indirger: süreler toplanır,
-    kaç giriş olduğu `parts` alanında durur."""
+kaç giriş olduğu `parts` alanında durur."""
     out = []
     for v in visits:
         t = datetime.datetime.fromisoformat(v["ts"])
@@ -92,6 +103,7 @@ def sessions(visits, gap=MERGE_GAP):
     for s in out:
         del s["_t"]
         s["kg"] = median(s.pop("_kg"))
+        s["short"] = s["secs"] is not None and s["secs"] < SHORT_STAY
     return out
 
 
@@ -130,6 +142,7 @@ def payload():
             "median_secs": median(done[-20:]),
             "merge_gap": MERGE_GAP,
             "faults": [f for i, f in enumerate(FAULTS) if fault >> i & 1],
+            "short_stays": sum(1 for s in sess if s["short"]),
         },
         "visits": sess, "cleans": cleans, "weights": weights,
         "n_events": len(evs),

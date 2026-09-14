@@ -36,10 +36,14 @@ def secret(name, jsonfile, key):
         sys.exit(f"missing {name} (and {jsonfile}:{key})")
 
 
+def cloud():
+    return tinytuya.Cloud(apiRegion=secret("TUYA_REGION", "cloud.json", "region"),
+                          apiKey=secret("TUYA_KEY", "cloud.json", "key"),
+                          apiSecret=secret("TUYA_SECRET", "cloud.json", "secret"))
+
+
 def fetch():
-    c = tinytuya.Cloud(apiRegion=secret("TUYA_REGION", "cloud.json", "region"),
-                       apiKey=secret("TUYA_KEY", "cloud.json", "key"),
-                       apiSecret=secret("TUYA_SECRET", "cloud.json", "secret"))
+    c = cloud()
     end = int(time.time() * 1000)
     r = c.getdevicelog(secret("TUYA_DEVICE", "config.json", "id"),
                        start=end - DAYS * 86400 * 1000, end=end,
@@ -85,6 +89,54 @@ def rebuild(known, cloud):
     return rows
 
 
+# Everything Tuya logs that is not a datapoint report: connectivity, firmware,
+# restarts. Nothing derives from these, they are kept because the device's own
+# history is only as complete as what we copy out of it.
+EVENT_NAMES = {1: "online", 2: "offline", 3: "activated", 4: "reset",
+               5: "command", 6: "firmware", 8: "signal", 9: "restart",
+               10: "timing"}
+DEVICE_LOG = "device_log.jsonl"
+
+
+def fetch_device_events():
+    c = cloud()
+    end = int(time.time() * 1000)
+    r = c.getdevicelog(secret("TUYA_DEVICE", "config.json", "id"),
+                       start=end - DAYS * 86400 * 1000, end=end,
+                       evtype=",".join(str(k) for k in sorted(EVENT_NAMES)),
+                       max_fetches=100)
+    if not isinstance(r, dict) or "result" not in r:
+        return []
+    out = []
+    for l in r["result"].get("logs", []):
+        eid = l.get("event_id")
+        if eid not in EVENT_NAMES:
+            continue
+        # ponytail: milisaniye saklanıyor çünkü firmware olayları aynı saniyede
+        # ikişer geliyor; saniyeye yuvarlamak gerçek olayları siliyordu.
+        ms = int(l["event_time"])
+        ts = datetime.datetime.fromtimestamp(ms / 1000, TZ)
+        out.append({"ts": ts.replace(tzinfo=None).isoformat(timespec="seconds"),
+                    "ms": ms, "event": eid, "name": EVENT_NAMES[eid],
+                    "value": l.get("event_value")})
+    return out
+
+
+def merge_device_log():
+    known = logbook.read_jsonl(DEVICE_LOG)
+    seen, merged = set(), []
+    for e in known + fetch_device_events():
+        k = (e["ms"], e["event"], e["value"])
+        if k not in seen:
+            seen.add(k)
+            merged.append(e)
+    merged.sort(key=lambda e: (e["ms"], e["event"]))
+    if len(merged) < len(known):
+        sys.exit(f"cihaz logu küçüldü ({len(known)} -> {len(merged)}), yazılmadı")
+    logbook.write_jsonl(DEVICE_LOG, merged)
+    return len(merged)
+
+
 def main():
     known = logbook.rows()
     rows = rebuild([(e["ts"], e["dp"], e["new"]) for e in known], fetch())
@@ -99,7 +151,8 @@ def main():
     os.makedirs("api", exist_ok=True)
     with open("api/data.json", "w") as f:
         json.dump(logbook.payload(), f, ensure_ascii=False)
-    print(f"{len(rows)} olay  ({rows[0]['ts']} -> {rows[-1]['ts']})")
+    n = merge_device_log()
+    print(f"{len(rows)} olay  ({rows[0]['ts']} -> {rows[-1]['ts']})  + {n} cihaz olayı")
 
 
 if __name__ == "__main__":

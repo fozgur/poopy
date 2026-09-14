@@ -43,7 +43,13 @@ paired four days earlier, so that measurement cannot yet distinguish "keeps
 everything" from "keeps a rolling window". The lookback is generous for that
 reason. `python poll.py 120` repairs a longer outage if the data is still there.
 
-`events.jsonl` only ever grows, whatever Tuya keeps or forgets, and so does git. `poll.py` rewrites it whole on each
+`events.jsonl` only ever grows, whatever Tuya keeps or forgets, and so does git.
+`device_log.jsonl` grows beside it, holding everything in Tuya's log that is not
+a datapoint report — the device going offline, rebooting, upgrading its firmware,
+and its WiFi signal about once an hour. Nothing derives from those; they are kept
+because the device's history is only as complete as the copy taken out of it.
+They are stored at millisecond precision: firmware events arrive two to a second,
+and rounding merged real events away. `poll.py` rewrites it whole on each
 run, so it refuses to write a result with fewer events than it read — a checkout
 that arrived without the file would otherwise replace the entire history with
 four days of it, silently. The one real hole is a gap longer than the window: if
@@ -111,7 +117,8 @@ output and `git checkout -- api/data.json` before pulling.
 | `logbook.py` | derivation rules, event store, local preview server |
 | `watch.py` | optional LAN listener, for the vendor-only datapoints |
 | `test_poopy.py` | self-check for the merge and the derivation |
-| `events.jsonl` | raw event log — the single source of truth |
+| `events.jsonl` | raw datapoint log — the single source of truth |
+| `device_log.jsonl` | the device's own lifecycle events: online/offline, restarts, firmware, WiFi signal |
 | `api/data.json` | derived output, the only thing the page reads |
 | `index.html`, `sw.js`, `manifest.json` | the UI, installable as a PWA |
 | `cutout.py` | one-off: `sutlac.jpeg` → transparent `sutlac.png` / `favicon.png` |
