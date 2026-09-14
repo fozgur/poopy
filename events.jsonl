@@ -2,9 +2,9 @@
 {"ts": "2026-09-10T17:47:30", "dp": 22, "name": "fault", "old": null, "new": 0}
 {"ts": "2026-09-10T17:47:30", "dp": 24, "name": "status", "old": null, "new": "clean"}
 {"ts": "2026-09-10T17:47:50", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
-{"ts": "2026-09-10T17:48:02", "dp": 24, "name": "status", "old": "standly", "new": "level"}
-{"ts": "2026-09-10T17:48:02", "dp": 24, "name": "status", "old": "level", "new": "test"}
-{"ts": "2026-09-10T17:50:51", "dp": 24, "name": "status", "old": "test", "new": "standly"}
+{"ts": "2026-09-10T17:48:02", "dp": 24, "name": "status", "old": "standly", "new": "test"}
+{"ts": "2026-09-10T17:48:02", "dp": 24, "name": "status", "old": "test", "new": "level"}
+{"ts": "2026-09-10T17:50:51", "dp": 24, "name": "status", "old": "level", "new": "standly"}
 {"ts": "2026-09-10T17:55:38", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
 {"ts": "2026-09-10T17:57:40", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
 {"ts": "2026-09-10T18:02:29", "dp": 24, "name": "status", "old": "standly", "new": "level"}
