@@ -41,7 +41,7 @@ def fetch():
     if not isinstance(r, dict) or "result" not in r:
         sys.exit("cloud error: " + json.dumps(r)[:400])
     out = []
-    for l in r["result"].get("logs", []):
+    for l in sorted(r["result"].get("logs", []), key=lambda l: int(l["event_time"])):
         dp = CODE2DP.get(l.get("code"))
         if dp is None:
             continue
@@ -55,12 +55,20 @@ def fetch():
     return out
 
 
-def main():
-    known = [(e["ts"], e["dp"], e["new"]) for e in logbook.rows()]
-    merged = sorted(set(known) | set(fetch()), key=lambda r: (r[0], r[1]))
+def rebuild(known, cloud):
+    """Union the two sources and rebuild the old->new chain. Each dp's chain is
+    independent, so replayed cloud rows collapse into the local ones instead of
+    duplicating."""
+    # ponytail: dedupe in a fixed order, never through set(). Two events can
+    # share a (ts, dp) — a status flicker inside one second — and set iteration
+    # order varies per process, which flipped them and churned a commit per run.
+    seen, ordered = set(), []
+    for i, t in enumerate(known + cloud):
+        if t not in seen:
+            seen.add(t)
+            ordered.append((t, i))
+    merged = [t for t, _ in sorted(ordered, key=lambda x: (x[0][0], x[0][1], x[1]))]
 
-    # rebuild the old->new chain over the union; each dp's chain is independent,
-    # so replayed cloud rows collapse into the local ones instead of duplicating.
     rows, state = [], {}
     for ts, dp, val in merged:
         if dp in state and state[dp] == val:
@@ -68,7 +76,11 @@ def main():
         rows.append({"ts": ts, "dp": dp, "name": NAMES.get(dp, f"dp{dp}"),
                      "old": state.get(dp), "new": val})
         state[dp] = val
+    return rows
 
+
+def main():
+    rows = rebuild([(e["ts"], e["dp"], e["new"]) for e in logbook.rows()], fetch())
     logbook.write_rows(rows)
     os.makedirs("api", exist_ok=True)
     with open("api/data.json", "w") as f:
