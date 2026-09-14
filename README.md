@@ -37,6 +37,14 @@ often the cat uses the box, not to the clock.
 The window is four days and the cron is six minutes, so Actions can skip a good
 number of runs — it often does under load — without losing anything.
 
+`events.jsonl` only ever grows. Tuya forgets everything older than four days;
+this file does not, and neither does git. `poll.py` rewrites it whole on each
+run, so it refuses to write a result with fewer events than it read — a checkout
+that arrived without the file would otherwise replace the entire history with
+four days of it, silently. The one real hole is a gap longer than the window: if
+the workflow stays broken for more than four days, the events in between are
+gone from Tuya before anything can fetch them.
+
 ### Why not just read the device directly?
 
 The box speaks the local Tuya protocol over the LAN, so a listener has to sit on

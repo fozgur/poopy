@@ -80,7 +80,15 @@ def rebuild(known, cloud):
 
 
 def main():
-    rows = rebuild([(e["ts"], e["dp"], e["new"]) for e in logbook.rows()], fetch())
+    known = logbook.rows()
+    rows = rebuild([(e["ts"], e["dp"], e["new"]) for e in known], fetch())
+
+    # The log only ever grows: the cloud window is 4 days, the file is forever.
+    # write_rows() truncates, so a checkout that lost events.jsonl would quietly
+    # replace years of history with four days of it. Refuse instead.
+    if len(rows) < len(known):
+        sys.exit(f"olay sayısı düştü ({len(known)} -> {len(rows)}), yazılmadı")
+
     logbook.write_rows(rows)
     os.makedirs("api", exist_ok=True)
     with open("api/data.json", "w") as f:
