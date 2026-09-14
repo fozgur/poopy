@@ -2,16 +2,16 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Sütlaç">
+<meta name="apple-mobile-web-app-title" content="Sütlaç Poopy">
 <meta name="theme-color" content="#F4E8D7">
 <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="apple-touch-icon" href="favicon.png">
 <link rel="manifest" href="manifest.json">
-<title>Sütlaç</title>
+<title>Sütlaç Poopy</title>
 <style>
 :root{
   --page:#F4E8D7; --card:#FFFBF4; --espresso:#2A1F1A; --card-2:#FBEFDC;
@@ -24,17 +24,21 @@
   --sans:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
 }
 *{box-sizing:border-box}
-html{-webkit-font-smoothing:antialiased}
+/* standalone modda çubuk yok: kenar boşlukları çentik ve home
+   indicator'ından gelmeli, sabit 20px'ten değil */
+:root{--gut:max(20px,env(safe-area-inset-left),env(safe-area-inset-right))}
+html{-webkit-font-smoothing:antialiased;background:var(--page);
+  -webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--page);color:var(--ink);
   font:400 17px/1.5 var(--sans);letter-spacing:-.2px}
-.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+.wrap{max-width:960px;margin:0 auto;padding:0 var(--gut)}
 
-header{position:sticky;top:0;z-index:30;padding:14px 20px;
+header{position:sticky;top:0;z-index:30;padding:14px var(--gut);
   background:rgba(244,232,215,.82);backdrop-filter:saturate(180%) blur(14px)}
 .bar{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px}
 .bar img{width:42px;height:42px;
   transition:transform .45s var(--ease)}
-.bar img:hover{transform:rotate(-8deg) scale(1.08)}
+@media (hover:hover){.bar img:hover{transform:rotate(-8deg) scale(1.08)}}
 .bar .nm{font-weight:750;font-size:19px;letter-spacing:-.5px}
 
 .alert{background:#FBE3DD;color:#8C2A18;border-radius:22px;padding:16px 22px;
@@ -72,7 +76,8 @@ header{position:sticky;top:0;z-index:30;padding:14px 20px;
   gap:14px;margin:78px auto 0}
 .sticker{background:var(--card);border-radius:22px;padding:20px 22px;
   box-shadow:var(--shadow);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
-.sticker:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}
+@media (hover:hover){
+  .sticker:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}}
 .sticker:nth-child(2){background:var(--card-2)}
 .sticker .v{font-weight:800;font-size:36px;letter-spacing:-1.4px;line-height:1.05;
   font-variant-numeric:tabular-nums}
@@ -105,7 +110,7 @@ header{position:sticky;top:0;z-index:30;padding:14px 20px;
 .card.dark .empty{background:rgba(255,255,255,.06);color:var(--muted-dark)}
 
 footer{text-align:center;color:var(--muted);font-size:13px;font-weight:550;
-  padding:44px 20px 56px}
+  padding:44px var(--gut) calc(56px + env(safe-area-inset-bottom))}
 
 /* ---- motion ---- */
 @media (prefers-reduced-motion:no-preference){
@@ -416,7 +421,12 @@ async function tick() {
     else paintWhen();
   } catch (e) { /* çevrimdışıyken son hal ekranda kalsın */ }
 }
-tick(); setInterval(tick, 10000);
+tick();
+// ponytail: veri en iyi ihtimalle 6 dakikada bir değişiyor, o yüzden
+// yoklama seyrek. Asıl tazeleme uygulamaya geri dönünce oluyor —
+// iOS arka planda timer'ı zaten donduruyor.
+setInterval(tick, 60000);
+addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
 
 const io = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }

@@ -1,6 +1,6 @@
 // ponytail: shell cache-first, data network-first with a cached fallback, so the
 // home-screen icon opens to the last known state instead of a dinosaur.
-const SHELL = "poopy-v2";
+const SHELL = "poopy-v3";
 const FILES = ["./", "index.html", "manifest.json", "favicon.png", "favicon-64.png"];
 
 self.addEventListener("install", e => {
@@ -16,9 +16,10 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   const fresh = fetch(e.request)
-    .then(r => { caches.open(SHELL).then(c => c.put(e.request, r.clone())); return r; });
+    .then(r => { caches.open(SHELL).then(c => c.put(e.request, r.clone())); return r; })
+    .catch(() => caches.match(e.request));   // çevrimdışı: sahipsiz reddetme bırakma
   e.respondWith(
     e.request.url.includes("data.json")
-      ? fresh.catch(() => caches.match(e.request))
+      ? fresh
       : caches.match(e.request).then(hit => hit || fresh));
 });
