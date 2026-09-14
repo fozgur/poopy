@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """Tuya Cloud -> events.jsonl -> api/data.json.  Runs on GitHub Actions; no LAN.
 
-The cloud keeps a ~4 day rolling window of the five official DPs (6/7/8/22/24),
-which is everything logbook.derive() needs. Vendor DPs (101/124) only ever come
-from a local watch.py run and are left untouched here.
+The cloud serves the five official DPs (6/7/8/22/24), which is everything
+logbook.derive() needs. Vendor DPs (101/124) only ever come from a local watch.py
+run and are left untouched here.
+
+Tuya's retention is unmeasured: as of 2026-09-14 it returns everything since the
+device was paired, but the device is only four days old, so a rolling window can
+neither be confirmed nor ruled out. The default lookback is a week, well past the
+six-minute cron, so a lost run repairs itself; pass a bigger number to repair a
+longer outage (python poll.py 120).
 """
 import datetime, json, os, sys, time
 from zoneinfo import ZoneInfo
@@ -16,7 +22,7 @@ TZ = ZoneInfo(os.environ["TZ"]) if os.environ.get("TZ") else None
 CODE2DP = {"cat_weight": 6, "excretion_times_day": 7, "excretion_time_day": 8,
            "fault": 22, "status": 24}
 NAMES = {v: k for k, v in CODE2DP.items()}
-DAYS = int(sys.argv[1]) if len(sys.argv) > 1 else 4
+DAYS = int(sys.argv[1]) if len(sys.argv) > 1 else 7
 
 
 def secret(name, jsonfile, key):

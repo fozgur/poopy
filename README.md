@@ -19,7 +19,7 @@ host. Nothing needs to stay switched on at home.
 ```
 GitHub Actions (every 6 min)
         |
-     poll.py  <--  Tuya Cloud API  (~4 day rolling window)
+     poll.py  <--  Tuya Cloud API  (a week's lookback)
         |
    events.jsonl  +  api/data.json
         |
@@ -34,16 +34,22 @@ an overlapping window produces a byte-identical file, so a run with no new devic
 activity commits nothing and triggers no deploy. Deploys are proportional to how
 often the cat uses the box, not to the clock.
 
-The window is four days and the cron is six minutes, so Actions can skip a good
-number of runs — it often does under load — without losing anything.
+Each run looks a week back while the cron is six minutes, so Actions can skip a
+great many runs — it often does under load — without losing anything.
 
-`events.jsonl` only ever grows. Tuya forgets everything older than four days;
-this file does not, and neither does git. `poll.py` rewrites it whole on each
+How long Tuya actually retains device logs is not established here. As of
+2026-09-14 the API returns everything since the device was paired; the device was
+paired four days earlier, so that measurement cannot yet distinguish "keeps
+everything" from "keeps a rolling window". The lookback is generous for that
+reason. `python poll.py 120` repairs a longer outage if the data is still there.
+
+`events.jsonl` only ever grows, whatever Tuya keeps or forgets, and so does git. `poll.py` rewrites it whole on each
 run, so it refuses to write a result with fewer events than it read — a checkout
 that arrived without the file would otherwise replace the entire history with
 four days of it, silently. The one real hole is a gap longer than the window: if
 the workflow stays broken for more than four days, the events in between are
-gone from Tuya before anything can fetch them.
+gone from Tuya before anything can fetch them — assuming it drops old logs at
+all.
 
 ### Why not just read the device directly?
 
@@ -138,8 +144,8 @@ Two subtleties that cost real debugging, in case you build something similar:
 
 ## Known limits
 
-- **The cloud logs five datapoints** (6/7/8/22/24) for four days. Enough for
-  everything above; `101`/`124` need `watch.py` on the LAN.
+- **The cloud logs five datapoints** (6/7/8/22/24). Enough for everything above;
+  `101`/`124` need `watch.py` on the LAN.
 - **The weight is noisy.** The same cat reads anywhere from 1.0 to 3.2 kg, so the
   headline figure is a median. `6` is a raw load-cell value and the vendor's own
   kilogram figure is wrong, so calibrate `W_SCALE` / `W_OFFSET` in `logbook.py`
