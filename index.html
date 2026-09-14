@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sütlaç">
+<meta name="theme-color" content="#F4E8D7">
+<link rel="apple-touch-icon" href="sutlac-face.png">
+<link rel="manifest" href="manifest.json">
+<title>Sütlaç</title>
+<style>
+:root{
+  --page:#F4E8D7; --card:#FFFBF4; --espresso:#2A1F1A; --card-2:#FBEFDC;
+  --ink:#2A1F1A; --muted:#8C7A67; --muted-dark:#C9B69C;
+  --orange:#C2571F; --butter:#F0B34E; --peach:#E8825A; --olive:#7E8F3C;
+  --shadow:0 10px 30px rgba(96,62,26,.10);
+  --shadow-lift:0 18px 44px rgba(96,62,26,.16);
+  --cat-w:min(268px,40vw);
+  --sans:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--page);color:var(--ink);
+  font:400 17px/1.5 var(--sans);letter-spacing:-.2px}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+/* ---- floating bar ---- */
+header{position:sticky;top:0;z-index:30;padding:14px 20px;
+  background:rgba(244,232,215,.82);backdrop-filter:saturate(180%) blur(14px)}
+.bar{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar img{width:38px;height:38px;border-radius:9999px;background:var(--card-2);
+  object-fit:cover;box-shadow:var(--shadow)}
+.bar .nm{font-weight:750;font-size:19px;letter-spacing:-.5px}
+.pill{margin-left:auto;display:inline-flex;align-items:center;gap:8px;
+  background:var(--card);border-radius:9999px;padding:8px 16px;
+  font-weight:650;font-size:14px;box-shadow:var(--shadow)}
+.dot{width:9px;height:9px;border-radius:9999px;background:var(--olive);flex:none}
+.dot--busy{background:var(--orange);animation:p 1.3s ease-in-out infinite}
+.dot--bad{background:#C0392B}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.dot--busy{animation:none}}
+
+/* ---- hero: Sütlaç stands in front of the card, he is not framed by it ---- */
+.hero{position:relative;margin:8px auto 0;background:var(--card);
+  border-radius:36px;box-shadow:var(--shadow);padding:44px 44px 44px;
+  min-height:366px;overflow:visible}
+.hero .eyebrow{margin:0;font-weight:700;font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--orange)}
+.big{margin:4px 0 0;font-weight:800;font-size:132px;line-height:.92;
+  letter-spacing:-6px;font-variant-numeric:tabular-nums}
+.big-u{display:block;font-weight:700;font-size:26px;letter-spacing:-.6px;
+  line-height:1.2;margin-top:6px;max-width:8ch}
+.hero .when{margin:18px 0 0;color:var(--muted);font-size:16px;font-weight:500}
+.cat{position:absolute;right:18px;bottom:-52px;width:var(--cat-w);
+  filter:drop-shadow(0 14px 22px rgba(96,62,26,.24));pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom,#000 76%,transparent 99%);
+  mask-image:linear-gradient(to bottom,#000 76%,transparent 99%)}
+.badge{position:absolute;right:calc(var(--cat-w) - 10px);top:46px;
+  transform:rotate(-7deg);background:var(--butter);color:var(--ink);
+  border-radius:9999px;padding:10px 18px;font-weight:750;font-size:15px;
+  box-shadow:var(--shadow);white-space:nowrap}
+
+/* ---- sticker stats ---- */
+.stickers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:14px;margin:78px auto 0}
+.sticker{background:var(--card);border-radius:22px;padding:20px 22px;box-shadow:var(--shadow)}
+.sticker:nth-child(2){background:var(--card-2)}
+.sticker .v{font-weight:800;font-size:36px;letter-spacing:-1.4px;line-height:1.05;
+  font-variant-numeric:tabular-nums}
+.sticker .k{margin-top:4px;color:var(--muted);font-size:14px;font-weight:550}
+
+/* ---- chart cards ---- */
+.card{background:var(--card);border-radius:30px;padding:34px;margin-top:20px;
+  box-shadow:var(--shadow)}
+.card.dark{background:var(--espresso);color:#FFF6E9}
+.card h2{margin:0;font-weight:780;font-size:31px;letter-spacing:-1px}
+.card .sub{margin:8px 0 0;color:var(--muted);font-size:15px;font-weight:500;max-width:60ch}
+.card.dark .sub{color:var(--muted-dark)}
+
+.alert{background:#FBE3DD;color:#8C2A18;border-radius:22px;padding:16px 22px;
+  margin-top:20px;font-weight:700;box-shadow:var(--shadow)}
+
+.chart{position:relative;margin-top:22px;width:100%;max-width:100%}
+.chart svg{display:block;width:100%;overflow:visible}
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--espresso);color:#FFF6E9;border-radius:12px;padding:8px 14px;
+  font-size:13px;font-weight:600;white-space:nowrap;z-index:5;
+  box-shadow:0 8px 22px rgba(42,31,26,.3)}
+.card.dark .tip{background:#FFF6E9;color:var(--espresso)}
+.empty{margin-top:22px;padding:40px;text-align:center;border-radius:20px;
+  background:var(--card-2);color:var(--muted);font-weight:550}
+.card.dark .empty{background:rgba(255,255,255,.06);color:var(--muted-dark)}
+
+footer{text-align:center;color:var(--muted);font-size:13px;font-weight:500;
+  padding:44px 20px 56px}
+
+@media (max-width:760px){
+  /* Sütlaç mobilde de kenardan taşsın — ortalanınca yine portreye dönüyor */
+  .hero{padding:30px 24px 34px;padding-right:calc(var(--cat-w) - 16px);min-height:308px}
+  .big{font-size:88px;letter-spacing:-3.5px}
+  .big-u{font-size:20px}
+  .hero .when{font-size:14px}
+  .cat{right:-4px;bottom:-38px}
+  .badge{position:static;display:inline-block;margin-top:16px;transform:rotate(-5deg)}
+  .stickers{margin-top:52px}
+  .card{padding:26px 22px;border-radius:26px}
+  .card h2{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<header><div class="bar">
+  <img src="sutlac-face.png" alt="">
+  <span class="nm">Sütlaç</span>
+  <span class="pill"><span class="dot" id="dot"></span><span id="status">bağlanıyor…</span></span>
+</div></header>
+
+<div class="wrap">
+  <div id="alert"></div>
+
+  <div class="hero">
+    <p class="eyebrow">bugün</p>
+    <p class="big" id="big">–<span class="big-u" id="bigu">kez gitti</span></p>
+    <p class="when" id="when">&nbsp;</p>
+    <span class="badge" id="badge"></span>
+    <img class="cat" src="sutlac.png" alt="Sütlaç">
+  </div>
+
+  <div class="stickers" id="stickers"></div>
+
+  <div class="card">
+    <h2>Günde kaç kez?</h2>
+    <p class="sub">Cihazın günlük sayacı her arttığında bir ziyaret düşüyor.</p>
+    <div class="chart" id="cVisits"></div>
+  </div>
+
+  <div class="card dark">
+    <h2>Ne kadar oyalanıyor?</h2>
+    <p class="sub">Ziyaret başına saniye. Kalıcı olarak uzayan süreler takip edilmeye değer.</p>
+    <div class="chart" id="cDur"></div>
+  </div>
+
+  <div class="card">
+    <h2>Kaç kilo?</h2>
+    <p class="sub" id="wSub">Her ziyarette tartılıyor.</p>
+    <div class="chart" id="cWeight"></div>
+  </div>
+
+  <div class="card">
+    <h2>Makine kaç kez döndü?</h2>
+    <p class="sub">Cihaz <b>clean</b> durumuna her geçtiğinde bir döngü.</p>
+    <div class="chart" id="cCleans"></div>
+  </div>
+</div>
+
+<footer id="foot"></footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const d2 = n => String(n).padStart(2, "0");
+const fmtS = s => s == null ? "–" : s < 60 ? s + " sn"
+  : Math.floor(s / 60) + " dk " + d2(s % 60) + " sn";
+const hhmm = t => { const d = new Date(t); return d2(d.getHours()) + ":" + d2(d.getMinutes()); };
+const dmy = t => { const d = new Date(t); return d2(d.getDate()) + "." + d2(d.getMonth() + 1); };
+const TR = {standly: "beklemede", clean: "temizliyor", sleep: "uyku"};
+
+function byDay(items, w) {
+  if (!items.length) return [];
+  const m = {};
+  items.forEach(i => { const k = i.ts.slice(0, 10); m[k] = (m[k] || 0) + (w ? w(i) : 1); });
+  const keys = Object.keys(m).sort(), out = [];
+  const cur = new Date(keys[0]), end = new Date(keys[keys.length - 1]);
+  while (cur <= end) {
+    const k = cur.toISOString().slice(0, 10);
+    out.push({k, v: m[k] || 0});
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
+function niceNum(x, round) {
+  const e = Math.floor(Math.log10(x)), f = x / Math.pow(10, e);
+  const nf = round ? (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10)
+                   : (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10);
+  return nf * Math.pow(10, e);
+}
+function niceScale(lo, hi, n) {
+  const step = niceNum(niceNum(hi - lo, false) / n, true);
+  return {min: Math.floor(lo / step) * step, max: Math.ceil(hi / step) * step, step};
+}
+
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a) => { const n = document.createElementNS(NS, t);
+  for (const k in a) n.setAttribute(k, a[k]); return n; };
+
+function drawChart(host, o) {
+  host.innerHTML = "";
+  if (!o.points.length) {
+    const d = document.createElement("div");
+    d.className = "empty"; d.textContent = o.empty || "Henüz veri yok.";
+    host.appendChild(d); return;
+  }
+  const dk = !!o.dark;
+  // one mark hue per surface — no chart puts two series side by side, so these
+  // are independent accents, not a categorical set. Both clear 3:1 on their card.
+  const c     = dk ? "#F0B34E" : "#C2571F";
+  const muted = dk ? "#C9B69C" : "#8C7A67";
+  const grid  = dk ? "rgba(255,255,255,.10)" : "rgba(42,31,26,.09)";
+  const axis  = dk ? "rgba(255,255,255,.26)" : "rgba(42,31,26,.22)";
+  const surf  = dk ? "#2A1F1A" : "#FFFBF4";
+
+  const W = Math.max(host.clientWidth || 640, 280), H = o.height || 250;
+  const P = {t: 14, r: 12, b: 32, l: 46};
+  const iw = W - P.l - P.r, ih = H - P.t - P.b, n = o.points.length;
+
+  const ys = o.points.map(p => p.y);
+  let lo = o.type === "bar" ? 0 : Math.min(...ys), hi = Math.max(...ys);
+  if (hi === lo) { const g = Math.abs(hi) * .1 || .5; hi += g; if (o.type !== "bar") lo -= g; }
+  const {min: ymin, max: ymax, step} = niceScale(lo, hi, 4);
+  const dec = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+  const Y = v => P.t + ih - (v - ymin) / (ymax - ymin) * ih;
+  const X = i => o.type === "bar" ? P.l + (i + .5) * (iw / n)
+                                  : P.l + (n === 1 ? iw / 2 : i * (iw / (n - 1)));
+
+  const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, width: W, height: H,
+                         role: "img", "aria-label": o.aria || ""});
+
+  for (let v = ymin; v <= ymax + step / 2; v += step) {
+    const y = Y(v), zero = Math.abs(v - ymin) < step / 2;
+    svg.appendChild(el("line", {x1: P.l, x2: W - P.r, y1: y, y2: y,
+      stroke: zero ? axis : grid, "stroke-width": zero ? 1.5 : 1}));
+    const tx = el("text", {x: P.l - 10, y: y + 4, fill: muted, "text-anchor": "end",
+      "font-size": 12, "font-weight": 600, "font-variant-numeric": "tabular-nums"});
+    tx.textContent = o.yFmt ? o.yFmt(v) : v.toFixed(dec);
+    svg.appendChild(tx);
+  }
+
+  if (o.type === "bar") {
+    const slot = iw / n, bw = Math.min(56, Math.max(6, slot - 12)), r = Math.min(9, bw / 2);
+    o.points.forEach((p, i) => {
+      if (!p.y) return;
+      const x = X(i) - bw / 2, y = Y(p.y), h = Math.max(Y(ymin) - y, r);
+      const rr = Math.min(r, h);
+      svg.appendChild(el("path", {fill: c, d:
+        `M${x},${y+h} L${x},${y+rr} Q${x},${y} ${x+rr},${y} L${x+bw-rr},${y}
+         Q${x+bw},${y} ${x+bw},${y+rr} L${x+bw},${y+h} Z`}));
+    });
+  } else {
+    svg.appendChild(el("path", {fill: "none", stroke: c, "stroke-width": 3,
+      "stroke-linejoin": "round", "stroke-linecap": "round",
+      d: o.points.map((p, i) => (i ? "L" : "M") + X(i) + "," + Y(p.y)).join(" ")}));
+    if (n <= 60) o.points.forEach((p, i) =>
+      svg.appendChild(el("circle", {cx: X(i), cy: Y(p.y), r: 4.5, fill: c,
+        stroke: surf, "stroke-width": 2.5})));
+  }
+
+  let lastX = -Infinity, lastTxt = null;
+  o.points.forEach((p, i) => {
+    const x = X(i);
+    if (x - lastX < 58 || p.x === lastTxt) return;
+    const tx = el("text", {x, y: H - 10, fill: muted, "text-anchor": "middle",
+      "font-size": 12, "font-weight": 600});
+    tx.textContent = p.x; svg.appendChild(tx);
+    lastX = x; lastTxt = p.x;
+  });
+
+  const cross = el("line", {y1: P.t, y2: P.t + ih, stroke: axis, "stroke-width": 1.5, opacity: 0});
+  svg.appendChild(cross);
+  const hot = el("rect", {x: P.l, y: P.t, width: iw, height: ih, fill: "transparent"});
+  svg.appendChild(hot);
+  host.appendChild(svg);
+
+  const tip = document.createElement("div");
+  tip.className = "tip"; host.appendChild(tip);
+  hot.addEventListener("mousemove", ev => {
+    const b = svg.getBoundingClientRect(), mx = (ev.clientX - b.left) * (W / b.width);
+    let best = 0, bd = Infinity;
+    o.points.forEach((p, i) => { const d = Math.abs(X(i) - mx); if (d < bd) { bd = d; best = i; } });
+    const p = o.points[best], px = X(best), py = Y(p.y), sc = b.width / W;
+    cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("opacity", 1);
+    tip.innerHTML = `${o.tip ? o.tip(p) : p.y} · ${p.full || p.x}`;
+    tip.style.opacity = 1;
+    tip.style.left = Math.min(Math.max(px * sc - tip.offsetWidth / 2, 0), b.width - tip.offsetWidth) + "px";
+    tip.style.top = Math.max(py * sc - tip.offsetHeight - 12, 0) + "px";
+  });
+  hot.addEventListener("mouseleave", () => {
+    tip.style.opacity = 0; cross.setAttribute("opacity", 0);
+  });
+}
+
+let LAST = null;
+function render(d) {
+  LAST = d;
+  const now = d.now, busy = now.cleaning === true, bad = now.faults.length > 0;
+  $("#dot").className = "dot" + (bad ? " dot--bad" : busy ? " dot--busy" : "");
+  $("#status").textContent = TR[now.status] || now.status || "–";
+  $("#alert").innerHTML = bad
+    ? `<div class="alert">Cihaz arıza bildiriyor: ${now.faults.join(", ")}</div>` : "";
+
+  const v = now.visits_today;
+  $("#big").firstChild.nodeValue = v ?? "–";
+  $("#bigu").textContent = v === 1 ? "kez gitti" : "kez gitti";
+  const last = d.visits[d.visits.length - 1];
+  $("#when").textContent = last
+    ? `son ziyaret ${dmy(last.ts)} ${hhmm(last.ts)} · ${fmtS(last.secs)} kaldı`
+    : "henüz ziyaret yok";
+  $("#badge").textContent = `${d.cleans.length} kez temizlendi`;
+
+  $("#stickers").innerHTML = [
+    [fmtS(now.median_secs && Math.round(now.median_secs)), "ortanca oyalanma"],
+    [now.weight_kg ? now.weight_kg.toFixed(1) + " kg" : "–", "ortanca ağırlık"],
+    [d.visits.length, "toplam ziyaret"],
+  ].map(([a, b]) => `<div class="sticker"><div class="v">${a}</div><div class="k">${b}</div></div>`).join("");
+
+  drawChart($("#cVisits"), {
+    type: "bar", aria: "Günlük ziyaret sayısı", empty: "Henüz ziyaret yok.",
+    points: byDay(d.visits, x => x.n).map(r => ({x: dmy(r.k), y: r.v, full: r.k})),
+    tip: p => `<b>${p.y}</b> ziyaret`,
+  });
+
+  drawChart($("#cDur"), {
+    type: "line", dark: true, aria: "Ziyaret başına kalma süresi",
+    empty: "Süre verisi yok.",
+    points: d.visits.filter(x => x.secs != null)
+      .map(x => ({x: dmy(x.ts), y: x.secs, full: dmy(x.ts) + " " + hhmm(x.ts)})),
+    yFmt: x => Math.round(x) + "s", tip: p => fmtS(p.y),
+  });
+
+  const ws = d.weights;
+  if (ws.length) {
+    const lo = Math.min(...ws.map(w => w.kg)), hi = Math.max(...ws.map(w => w.kg));
+    $("#wSub").textContent = `Her ziyarette tartılıyor — ama kantar ${lo.toFixed(1)}–${hi.toFixed(1)} kg `
+      + `arası savuruyor, o yüzden tek ölçüme değil ortancaya bakıyoruz.`;
+  }
+  drawChart($("#cWeight"), {
+    type: "line", aria: "Ağırlık okumaları", empty: "Ağırlık verisi yok.",
+    points: ws.map(w => ({x: dmy(w.ts), y: w.kg, full: dmy(w.ts) + " " + hhmm(w.ts)})),
+    tip: p => `<b>${p.y.toFixed(1)}</b> kg`,
+  });
+
+  drawChart($("#cCleans"), {
+    type: "bar", aria: "Günlük temizlik döngüsü", empty: "Temizlik kaydı yok.",
+    points: byDay(d.cleans).map(r => ({x: dmy(r.k), y: r.v, full: r.k})),
+    tip: p => `<b>${p.y}</b> döngü`,
+  });
+
+  const first = d.visits[0] || d.cleans[0];
+  $("#foot").textContent = first
+    ? `${dmy(first.ts)} tarihinden beri kayıtta · POOPY NANO 3, yerel ağdan okunuyor`
+    : "POOPY NANO 3, yerel ağdan okunuyor";
+}
+
+async function tick() {
+  try { render(await (await fetch("api/data.json", {cache: "no-store"})).json()); }
+  catch { $("#status").textContent = "bağlantı yok"; $("#dot").className = "dot dot--bad"; }
+}
+tick(); setInterval(tick, 10000);
+let rt; addEventListener("resize", () => {
+  clearTimeout(rt); rt = setTimeout(() => LAST && render(LAST), 150);
+});
+</script>
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

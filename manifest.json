@@ -1,0 +1,16 @@
+{
+  "name": "Sütlaç",
+  "short_name": "Sütlaç",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F4E8D7",
+  "theme_color": "#F4E8D7",
+  "icons": [
+    {
+      "src": "sutlac-face.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
