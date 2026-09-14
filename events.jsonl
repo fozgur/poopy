@@ -159,3 +159,4 @@
 {"ts": "2026-09-14T13:13:49", "dp": 128, "name": "dp128", "old": false, "new": true}
 {"ts": "2026-09-14T13:13:50", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
 {"ts": "2026-09-14T13:16:47", "dp": 128, "name": "dp128", "old": true, "new": false}
+{"ts": "2026-09-14T23:46:40", "dp": 7, "name": "excretion_times_day", "old": 4, "new": 0}
