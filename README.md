@@ -51,6 +51,7 @@ sayacı eskide kalır, gerisi çalışır.
 | `events.jsonl` | ham olay logu, tek veri kaynağı |
 | `api/data.json` | arayüzün okuduğu türetilmiş çıktı |
 | `index.html`, `sw.js`, `manifest.json` | arayüz (PWA) |
+| `cutout.py` | `sutlac.jpeg` → fonu şeffaf `sutlac.png` + `favicon.png`; fotoğraf değişirse tekrar çalıştır |
 | `config.json`, `cloud.json` | cihaz ve bulut anahtarları — gitignore'da |
 
 ## Türetme kuralları
@@ -58,16 +59,21 @@ sayacı eskide kalır, gerisi çalışır.
 | ne | nereden |
 |---|---|
 | ziyaret | `7` (excretion_times_day) her arttığında |
+| **birleşik ziyaret** | `MERGE_GAP` (120 sn) içindeki ardışık girişler tek ziyaret; süreler toplanır, giriş sayısı `parts` alanında |
 | kalma süresi | o andaki `8` (excretion_time_day) |
 | tartım | o andaki `6` (cat_weight) |
 | temizlik | `24` (status) `clean`'e girip çıktığında |
+
+Arayüzdeki her sayı **birleşik ziyaret** üzerinden. Sütlaç girip çıkıp giriyor;
+cihazın kendi sayacı bunları ayrı sayıyor (bugün 4), birleştirince gerçek ziyaret
+sayısı çıkıyor (2). Süre grafiğinde **içi boş halka = girdili çıktılı ziyaret**.
 
 ## Bilinen sınırlar
 
 - **Bulut sadece 5 DP logluyor** (6/7/8/22/24). Türetme için hepsi yeterli;
   `101`/`124` yalnızca `watch.py` açıkken gelir.
 - **Ağırlık gürültülü.** Aynı kedi için 1.0–3.2 kg okumalar geliyor. Arayüz
-  ortanca gösteriyor. Kalibrasyon: `logbook.py` içindeki `W_SCALE` / `W_OFFSET`.
+  medyan gösteriyor. Kalibrasyon: `logbook.py` içindeki `W_SCALE` / `W_OFFSET`.
 - **Kum ağırlığı yok.** Cihazda kumu tartan DP yok; gram ölçümü için harici
   kantar (ESP32 + HX711) gerekir.
 - **Site açık.** URL'yi bilen görür. Kapatmak istersen Cloudflare Access

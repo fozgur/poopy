@@ -7,10 +7,10 @@
   "theme_color": "#F4E8D7",
   "icons": [
     {
-      "src": "sutlac-face.png",
+      "src": "favicon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

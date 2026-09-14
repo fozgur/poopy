@@ -37,3 +37,35 @@ al = np.asarray(out)[..., 3]
 print("boyut:", out.size, "| tam opak %:", round(100*(al == 255).mean(), 1),
       "| üst şerit ort:", round(al[:5].mean(), 2),
       "| köşeler:", al[0,0], al[0,-1], al[-1,-1])
+
+# --- favicon: kafayı tespit edip daireye ortala ---
+al = np.asarray(out)[..., 3] > 128
+Hh, Ww = al.shape
+ext = np.zeros(Hh, int)
+for r in range(Hh):
+    cc = np.where(al[r])[0]
+    if len(cc):
+        ext[r] = cc.max() - cc.min()
+_lo, _hi = int(Hh * .35), int(Hh * .58)
+neck = _lo + int(np.argmin(ext[_lo:_hi]))      # yanaklardan sonraki daralma = boyun
+# neck = çenenin daraldığı yer; asıl çene ucu bunun biraz altında kalıyor.
+# burun ve ağzı kesmemek için oraya kadar in.
+chin = min(Hh, int(neck * 1.17))
+cols = np.where(al[:chin].any(0))[0]
+head = out.crop((int(cols.min()), 0, int(cols.max()) + 1, chin))
+
+# çene hizasındaki düz kesik zemine karışsın
+ha = np.asarray(head).astype(np.float64).copy()
+_k = int(ha.shape[0] * .92)
+ha[_k:, :, 3] *= np.clip(np.linspace(1, 0, ha.shape[0] - _k), 0, 1)[:, None]
+head = Image.fromarray(ha.astype(np.uint8))
+
+# zeminsiz, çerçevesiz: sadece kafa. şeffaf kare tuvale ortalanır.
+S = 512
+scale = S * .94 / max(head.width, head.height)
+hw, hh = int(head.width * scale), int(head.height * scale)
+ico = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+ico.alpha_composite(head.resize((hw, hh), Image.LANCZOS), ((S - hw) // 2, (S - hh) // 2))
+ico.save(P + "favicon.png", optimize=True)
+ico.resize((64, 64), Image.LANCZOS).save(P + "favicon-64.png", optimize=True)
+print("favicon:", ico.size, "| boyun:", neck, "| çene:", chin, "| kafa:", head.size)

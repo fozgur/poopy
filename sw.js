@@ -1,7 +1,7 @@
 // ponytail: shell cache-first, data network-first with a cached fallback, so the
 // home-screen icon opens to the last known state instead of a dinosaur.
-const SHELL = "poopy-v1";
-const FILES = ["./", "index.html", "manifest.json", "sutlac-face.png", "sutlac.png"];
+const SHELL = "poopy-v2";
+const FILES = ["./", "index.html", "manifest.json", "favicon.png", "favicon-64.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

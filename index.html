@@ -7,7 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Sütlaç">
 <meta name="theme-color" content="#F4E8D7">
-<link rel="apple-touch-icon" href="sutlac-face.png">
+<link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="apple-touch-icon" href="favicon.png">
 <link rel="manifest" href="manifest.json">
 <title>Sütlaç</title>
 <style>
@@ -16,8 +18,9 @@
   --ink:#2A1F1A; --muted:#8C7A67; --muted-dark:#C9B69C;
   --orange:#C2571F; --butter:#F0B34E; --peach:#E8825A; --olive:#7E8F3C;
   --shadow:0 10px 30px rgba(96,62,26,.10);
-  --shadow-lift:0 18px 44px rgba(96,62,26,.16);
+  --shadow-lift:0 20px 46px rgba(96,62,26,.18);
   --cat-w:min(268px,40vw);
+  --ease:cubic-bezier(.22,1,.36,1);
   --sans:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
 }
 *{box-sizing:border-box}
@@ -26,33 +29,35 @@ body{margin:0;background:var(--page);color:var(--ink);
   font:400 17px/1.5 var(--sans);letter-spacing:-.2px}
 .wrap{max-width:960px;margin:0 auto;padding:0 20px}
 
-/* ---- floating bar ---- */
 header{position:sticky;top:0;z-index:30;padding:14px 20px;
   background:rgba(244,232,215,.82);backdrop-filter:saturate(180%) blur(14px)}
 .bar{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px}
-.bar img{width:38px;height:38px;border-radius:9999px;background:var(--card-2);
-  object-fit:cover;box-shadow:var(--shadow)}
+.bar img{width:42px;height:42px;
+  transition:transform .45s var(--ease)}
+.bar img:hover{transform:rotate(-8deg) scale(1.08)}
 .bar .nm{font-weight:750;font-size:19px;letter-spacing:-.5px}
-.pill{margin-left:auto;display:inline-flex;align-items:center;gap:8px;
-  background:var(--card);border-radius:9999px;padding:8px 16px;
-  font-weight:650;font-size:14px;box-shadow:var(--shadow)}
-.dot{width:9px;height:9px;border-radius:9999px;background:var(--olive);flex:none}
-.dot--busy{background:var(--orange);animation:p 1.3s ease-in-out infinite}
-.dot--bad{background:#C0392B}
-@keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
-@media (prefers-reduced-motion:reduce){.dot--busy{animation:none}}
 
-/* ---- hero: Sütlaç stands in front of the card, he is not framed by it ---- */
+.alert{background:#FBE3DD;color:#8C2A18;border-radius:22px;padding:16px 22px;
+  margin-top:20px;font-weight:700;box-shadow:var(--shadow)}
+
+/* ---- hero ---- */
 .hero{position:relative;margin:8px auto 0;background:var(--card);
-  border-radius:36px;box-shadow:var(--shadow);padding:44px 44px 44px;
+  border-radius:36px;box-shadow:var(--shadow);padding:44px;
   min-height:366px;overflow:visible}
-.hero .eyebrow{margin:0;font-weight:700;font-size:13px;letter-spacing:.14em;
+.hero::before{content:"";position:absolute;right:2%;bottom:-4%;width:56%;height:86%;
+  border-radius:9999px;background:radial-gradient(closest-side,rgba(240,179,78,.30),transparent 72%);
+  pointer-events:none}
+.eyebrow{margin:0;font-weight:750;font-size:13px;letter-spacing:.14em;
   text-transform:uppercase;color:var(--orange)}
 .big{margin:4px 0 0;font-weight:800;font-size:132px;line-height:.92;
-  letter-spacing:-6px;font-variant-numeric:tabular-nums}
+  letter-spacing:-6px;font-variant-numeric:tabular-nums;position:relative}
 .big-u{display:block;font-weight:700;font-size:26px;letter-spacing:-.6px;
-  line-height:1.2;margin-top:6px;max-width:8ch}
-.hero .when{margin:18px 0 0;color:var(--muted);font-size:16px;font-weight:500}
+  line-height:1.2;margin-top:6px;max-width:9ch}
+.when{margin:18px 0 0;color:var(--muted);font-size:16px;font-weight:550;position:relative}
+.inout{display:inline-flex;align-items:center;gap:6px;background:var(--card-2);
+  color:var(--orange);border-radius:9999px;padding:4px 12px;font-size:14px;
+  font-weight:750;margin-left:6px;white-space:nowrap}
+.inout b{font-weight:800}
 .cat{position:absolute;right:18px;bottom:-52px;width:var(--cat-w);
   filter:drop-shadow(0 14px 22px rgba(96,62,26,.24));pointer-events:none;
   -webkit-mask-image:linear-gradient(to bottom,#000 76%,transparent 99%);
@@ -62,60 +67,87 @@ header{position:sticky;top:0;z-index:30;padding:14px 20px;
   border-radius:9999px;padding:10px 18px;font-weight:750;font-size:15px;
   box-shadow:var(--shadow);white-space:nowrap}
 
-/* ---- sticker stats ---- */
+/* ---- stickers ---- */
 .stickers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
   gap:14px;margin:78px auto 0}
-.sticker{background:var(--card);border-radius:22px;padding:20px 22px;box-shadow:var(--shadow)}
+.sticker{background:var(--card);border-radius:22px;padding:20px 22px;
+  box-shadow:var(--shadow);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+.sticker:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}
 .sticker:nth-child(2){background:var(--card-2)}
 .sticker .v{font-weight:800;font-size:36px;letter-spacing:-1.4px;line-height:1.05;
   font-variant-numeric:tabular-nums}
-.sticker .k{margin-top:4px;color:var(--muted);font-size:14px;font-weight:550}
+.sticker .k{margin-top:4px;color:var(--muted);font-size:14px;font-weight:600}
 
 /* ---- chart cards ---- */
 .card{background:var(--card);border-radius:30px;padding:34px;margin-top:20px;
   box-shadow:var(--shadow)}
 .card.dark{background:var(--espresso);color:#FFF6E9}
+.head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .card h2{margin:0;font-weight:780;font-size:31px;letter-spacing:-1px}
-.card .sub{margin:8px 0 0;color:var(--muted);font-size:15px;font-weight:500;max-width:60ch}
-.card.dark .sub{color:var(--muted-dark)}
-
-.alert{background:#FBE3DD;color:#8C2A18;border-radius:22px;padding:16px 22px;
-  margin-top:20px;font-weight:700;box-shadow:var(--shadow)}
+.legend{margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  color:var(--muted);font-size:13px;font-weight:650}
+.card.dark .legend{color:var(--muted-dark)}
+.legend i{width:13px;height:13px;border-radius:9999px;border:2.5px solid var(--orange);
+  background:var(--card);display:inline-block}
+.card.dark .legend i{border-color:var(--butter);background:var(--espresso)}
 
 .chart{position:relative;margin-top:22px;width:100%;max-width:100%}
 .chart svg{display:block;width:100%;overflow:visible}
-.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
+.tip{position:absolute;pointer-events:none;opacity:0;transform:translateY(4px);
+  transition:opacity .15s,transform .15s;
   background:var(--espresso);color:#FFF6E9;border-radius:12px;padding:8px 14px;
-  font-size:13px;font-weight:600;white-space:nowrap;z-index:5;
+  font-size:13px;font-weight:650;white-space:nowrap;z-index:5;
   box-shadow:0 8px 22px rgba(42,31,26,.3)}
+.tip.on{opacity:1;transform:translateY(0)}
 .card.dark .tip{background:#FFF6E9;color:var(--espresso)}
 .empty{margin-top:22px;padding:40px;text-align:center;border-radius:20px;
-  background:var(--card-2);color:var(--muted);font-weight:550}
+  background:var(--card-2);color:var(--muted);font-weight:600}
 .card.dark .empty{background:rgba(255,255,255,.06);color:var(--muted-dark)}
 
-footer{text-align:center;color:var(--muted);font-size:13px;font-weight:500;
+footer{text-align:center;color:var(--muted);font-size:13px;font-weight:550;
   padding:44px 20px 56px}
+
+/* ---- motion ---- */
+@media (prefers-reduced-motion:no-preference){
+  .reveal{opacity:0;transform:translateY(22px)}
+  .reveal.in{opacity:1;transform:none;
+    transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .cat{animation:floaty 6.5s ease-in-out infinite}
+  @keyframes pop-in{0%{opacity:0;transform:rotate(-7deg) scale(.72)}
+    65%{opacity:1;transform:rotate(-4deg) scale(1.06)}
+    100%{opacity:1;transform:rotate(-7deg) scale(1)}}
+  .badge{animation:pop-in .75s var(--ease) .35s backwards}
+  @keyframes grow{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+  .anim .bar{transform-box:fill-box;transform-origin:50% 100%;
+    animation:grow .75s var(--ease) backwards}
+  @keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+  .anim .line{stroke-dasharray:var(--len);animation:draw 1.25s var(--ease) backwards}
+  @keyframes pt-in{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+  .anim .pt{transform-box:fill-box;transform-origin:50% 50%;
+    animation:pt-in .45s var(--ease) backwards}
+}
 
 @media (max-width:760px){
   /* Sütlaç mobilde de kenardan taşsın — ortalanınca yine portreye dönüyor */
   .hero{padding:30px 24px 34px;padding-right:calc(var(--cat-w) - 16px);min-height:308px}
   .big{font-size:88px;letter-spacing:-3.5px}
   .big-u{font-size:20px}
-  .hero .when{font-size:14px}
+  .when{font-size:14px}
   .cat{right:-4px;bottom:-38px}
   .badge{position:static;display:inline-block;margin-top:16px;transform:rotate(-5deg)}
   .stickers{margin-top:52px}
   .card{padding:26px 22px;border-radius:26px}
   .card h2{font-size:26px}
+  .legend{margin-left:0;width:100%}
 }
 </style>
 </head>
 <body>
 
 <header><div class="bar">
-  <img src="sutlac-face.png" alt="">
-  <span class="nm">Sütlaç</span>
-  <span class="pill"><span class="dot" id="dot"></span><span id="status">bağlanıyor…</span></span>
+  <img src="favicon.png" alt="Sütlaç">
+  <span class="nm">Sütlaç Poopy</span>
 </div></header>
 
 <div class="wrap">
@@ -123,7 +155,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;font-weight:500;
 
   <div class="hero">
     <p class="eyebrow">bugün</p>
-    <p class="big" id="big">–<span class="big-u" id="bigu">kez gitti</span></p>
+    <p class="big"><span id="big">–</span><span class="big-u" id="bigu">kez gitti</span></p>
     <p class="when" id="when">&nbsp;</p>
     <span class="badge" id="badge"></span>
     <img class="cat" src="sutlac.png" alt="Sütlaç">
@@ -131,46 +163,44 @@ footer{text-align:center;color:var(--muted);font-size:13px;font-weight:500;
 
   <div class="stickers" id="stickers"></div>
 
-  <div class="card">
-    <h2>Günde kaç kez?</h2>
-    <p class="sub">Cihazın günlük sayacı her arttığında bir ziyaret düşüyor.</p>
-    <div class="chart" id="cVisits"></div>
-  </div>
+  <div class="card reveal"><div class="head"><h2>Günde kaç kez?</h2></div>
+    <div class="chart" id="cVisits"></div></div>
 
-  <div class="card dark">
-    <h2>Ne kadar oyalanıyor?</h2>
-    <p class="sub">Ziyaret başına saniye. Kalıcı olarak uzayan süreler takip edilmeye değer.</p>
-    <div class="chart" id="cDur"></div>
-  </div>
+  <div class="card dark reveal"><div class="head"><h2>Ne kadar oyalanıyor?</h2>
+    <span class="legend"><i></i> girdili çıktılı</span></div>
+    <div class="chart" id="cDur"></div></div>
 
-  <div class="card">
-    <h2>Kaç kilo?</h2>
-    <p class="sub" id="wSub">Her ziyarette tartılıyor.</p>
-    <div class="chart" id="cWeight"></div>
-  </div>
+  <div class="card reveal"><div class="head"><h2>Kaç kilo?</h2></div>
+    <div class="chart" id="cWeight"></div></div>
 
-  <div class="card">
-    <h2>Makine kaç kez döndü?</h2>
-    <p class="sub">Cihaz <b>clean</b> durumuna her geçtiğinde bir döngü.</p>
-    <div class="chart" id="cCleans"></div>
-  </div>
+  <div class="card reveal"><div class="head"><h2>Makine kaç kez döndü?</h2></div>
+    <div class="chart" id="cCleans"></div></div>
 </div>
 
 <footer id="foot"></footer>
-
 <script>
 const $ = s => document.querySelector(s);
 const d2 = n => String(n).padStart(2, "0");
 const fmtS = s => s == null ? "–" : s < 60 ? s + " sn"
-  : Math.floor(s / 60) + " dk " + d2(s % 60) + " sn";
+  : Math.floor(s / 60) + " dk " + d2(Math.round(s % 60)) + " sn";
 const hhmm = t => { const d = new Date(t); return d2(d.getHours()) + ":" + d2(d.getMinutes()); };
 const dmy = t => { const d = new Date(t); return d2(d.getDate()) + "." + d2(d.getMonth() + 1); };
-const TR = {standly: "beklemede", clean: "temizliyor", sleep: "uyku"};
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function byDay(items, w) {
+function ago(ts) {
+  const s = (Date.now() - new Date(ts)) / 1000;
+  if (s < 90) return "az önce";
+  const m = Math.round(s / 60); if (m < 60) return m + " dakika önce";
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + " saat" + (m % 60 >= 5 ? ` ${m % 60} dakika` : "") + " önce";
+  const d = Math.floor(h / 24);
+  return d === 1 ? "dün" : d + " gün önce";
+}
+
+function byDay(items) {
   if (!items.length) return [];
   const m = {};
-  items.forEach(i => { const k = i.ts.slice(0, 10); m[k] = (m[k] || 0) + (w ? w(i) : 1); });
+  items.forEach(i => { const k = i.ts.slice(0, 10); m[k] = (m[k] || 0) + 1; });
   const keys = Object.keys(m).sort(), out = [];
   const cur = new Date(keys[0]), end = new Date(keys[keys.length - 1]);
   while (cur <= end) {
@@ -227,6 +257,7 @@ function drawChart(host, o) {
 
   const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, width: W, height: H,
                          role: "img", "aria-label": o.aria || ""});
+  if (o.animate && !RM) svg.setAttribute("class", "anim");
 
   for (let v = ymin; v <= ymax + step / 2; v += step) {
     const y = Y(v), zero = Math.abs(v - ymin) < step / 2;
@@ -238,23 +269,33 @@ function drawChart(host, o) {
     svg.appendChild(tx);
   }
 
+  let line = null;
   if (o.type === "bar") {
     const slot = iw / n, bw = Math.min(56, Math.max(6, slot - 12)), r = Math.min(9, bw / 2);
     o.points.forEach((p, i) => {
       if (!p.y) return;
       const x = X(i) - bw / 2, y = Y(p.y), h = Math.max(Y(ymin) - y, r);
       const rr = Math.min(r, h);
-      svg.appendChild(el("path", {fill: c, d:
+      const bar = el("path", {class: "bar", fill: c, d:
         `M${x},${y+h} L${x},${y+rr} Q${x},${y} ${x+rr},${y} L${x+bw-rr},${y}
-         Q${x+bw},${y} ${x+bw},${y+rr} L${x+bw},${y+h} Z`}));
+         Q${x+bw},${y} ${x+bw},${y+rr} L${x+bw},${y+h} Z`});
+      bar.style.animationDelay = (i * 60) + "ms";
+      svg.appendChild(bar);
     });
   } else {
-    svg.appendChild(el("path", {fill: "none", stroke: c, "stroke-width": 3,
+    line = el("path", {class: "line", fill: "none", stroke: c, "stroke-width": 3,
       "stroke-linejoin": "round", "stroke-linecap": "round",
-      d: o.points.map((p, i) => (i ? "L" : "M") + X(i) + "," + Y(p.y)).join(" ")}));
-    if (n <= 60) o.points.forEach((p, i) =>
-      svg.appendChild(el("circle", {cx: X(i), cy: Y(p.y), r: 4.5, fill: c,
-        stroke: surf, "stroke-width": 2.5})));
+      d: o.points.map((p, i) => (i ? "L" : "M") + X(i) + "," + Y(p.y)).join(" ")});
+    svg.appendChild(line);
+    if (n <= 60) o.points.forEach((p, i) => {
+      // an in-and-out visit gets a hollow ring — shape, not colour, carries it
+      const ring = p.parts > 1;
+      const dot = el("circle", {class: "pt", cx: X(i), cy: Y(p.y),
+        r: ring ? 6 : 4.5, fill: ring ? surf : c, stroke: ring ? c : surf,
+        "stroke-width": ring ? 3 : 2.5});
+      dot.style.animationDelay = (420 + i * 45) + "ms";
+      svg.appendChild(dot);
+    });
   }
 
   let lastX = -Infinity, lastTxt = null;
@@ -273,6 +314,8 @@ function drawChart(host, o) {
   svg.appendChild(hot);
   host.appendChild(svg);
 
+  if (line) line.style.setProperty("--len", line.getTotalLength());
+
   const tip = document.createElement("div");
   tip.className = "tip"; host.appendChild(tip);
   hot.addEventListener("mousemove", ev => {
@@ -282,87 +325,107 @@ function drawChart(host, o) {
     const p = o.points[best], px = X(best), py = Y(p.y), sc = b.width / W;
     cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("opacity", 1);
     tip.innerHTML = `${o.tip ? o.tip(p) : p.y} · ${p.full || p.x}`;
-    tip.style.opacity = 1;
+    tip.classList.add("on");
     tip.style.left = Math.min(Math.max(px * sc - tip.offsetWidth / 2, 0), b.width - tip.offsetWidth) + "px";
     tip.style.top = Math.max(py * sc - tip.offsetHeight - 12, 0) + "px";
   });
   hot.addEventListener("mouseleave", () => {
-    tip.style.opacity = 0; cross.setAttribute("opacity", 0);
+    tip.classList.remove("on"); cross.setAttribute("opacity", 0);
   });
 }
 
-let LAST = null;
+function countUp(node, to) {
+  if (RM || !(to > 0)) { node.textContent = to ?? "–"; return; }
+  const t0 = performance.now(), dur = 900;
+  (function step(t) {
+    const k = Math.min(1, (t - t0) / dur);
+    node.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+let LAST = null, drawn = false;
 function render(d) {
   LAST = d;
-  const now = d.now, busy = now.cleaning === true, bad = now.faults.length > 0;
-  $("#dot").className = "dot" + (bad ? " dot--bad" : busy ? " dot--busy" : "");
-  $("#status").textContent = TR[now.status] || now.status || "–";
-  $("#alert").innerHTML = bad
+  const now = d.now, first = !drawn;
+  $("#alert").innerHTML = now.faults.length
     ? `<div class="alert">Cihaz arıza bildiriyor: ${now.faults.join(", ")}</div>` : "";
 
   const v = now.visits_today;
-  $("#big").firstChild.nodeValue = v ?? "–";
-  $("#bigu").textContent = v === 1 ? "kez gitti" : "kez gitti";
-  const last = d.visits[d.visits.length - 1];
-  $("#when").textContent = last
-    ? `son ziyaret ${dmy(last.ts)} ${hhmm(last.ts)} · ${fmtS(last.secs)} kaldı`
-    : "henüz ziyaret yok";
+  if (first) countUp($("#big"), v); else $("#big").textContent = v ?? "–";
+  $("#bigu").textContent = "kez gitti";
   $("#badge").textContent = `${d.cleans.length} kez temizlendi`;
+  paintWhen();
 
   $("#stickers").innerHTML = [
-    [fmtS(now.median_secs && Math.round(now.median_secs)), "ortanca oyalanma"],
-    [now.weight_kg ? now.weight_kg.toFixed(1) + " kg" : "–", "ortanca ağırlık"],
+    [fmtS(now.median_secs && Math.round(now.median_secs)), "medyan oyalanma"],
+    [now.weight_kg ? now.weight_kg.toFixed(1) + " kg" : "–", "medyan ağırlık"],
     [d.visits.length, "toplam ziyaret"],
   ].map(([a, b]) => `<div class="sticker"><div class="v">${a}</div><div class="k">${b}</div></div>`).join("");
 
-  drawChart($("#cVisits"), {
+  const A = {animate: first};
+  drawChart($("#cVisits"), Object.assign({
     type: "bar", aria: "Günlük ziyaret sayısı", empty: "Henüz ziyaret yok.",
-    points: byDay(d.visits, x => x.n).map(r => ({x: dmy(r.k), y: r.v, full: r.k})),
+    points: byDay(d.visits).map(r => ({x: dmy(r.k), y: r.v, full: r.k})),
     tip: p => `<b>${p.y}</b> ziyaret`,
-  });
+  }, A));
 
-  drawChart($("#cDur"), {
-    type: "line", dark: true, aria: "Ziyaret başına kalma süresi",
+  drawChart($("#cDur"), Object.assign({
+    type: "line", dark: true, aria: "Ziyaret başına toplam kalma süresi",
     empty: "Süre verisi yok.",
-    points: d.visits.filter(x => x.secs != null)
-      .map(x => ({x: dmy(x.ts), y: x.secs, full: dmy(x.ts) + " " + hhmm(x.ts)})),
+    points: d.visits.filter(x => x.secs != null).map(x => ({
+      x: dmy(x.ts), y: x.secs, parts: x.parts,
+      full: dmy(x.ts) + " " + hhmm(x.ts) + (x.parts > 1 ? ` · ${x.parts} giriş` : ""),
+    })),
     yFmt: x => Math.round(x) + "s", tip: p => fmtS(p.y),
-  });
+  }, A));
 
-  const ws = d.weights;
-  if (ws.length) {
-    const lo = Math.min(...ws.map(w => w.kg)), hi = Math.max(...ws.map(w => w.kg));
-    $("#wSub").textContent = `Her ziyarette tartılıyor — ama kantar ${lo.toFixed(1)}–${hi.toFixed(1)} kg `
-      + `arası savuruyor, o yüzden tek ölçüme değil ortancaya bakıyoruz.`;
-  }
-  drawChart($("#cWeight"), {
+  drawChart($("#cWeight"), Object.assign({
     type: "line", aria: "Ağırlık okumaları", empty: "Ağırlık verisi yok.",
-    points: ws.map(w => ({x: dmy(w.ts), y: w.kg, full: dmy(w.ts) + " " + hhmm(w.ts)})),
+    points: d.weights.map(w => ({x: dmy(w.ts), y: w.kg, full: dmy(w.ts) + " " + hhmm(w.ts)})),
     tip: p => `<b>${p.y.toFixed(1)}</b> kg`,
-  });
+  }, A));
 
-  drawChart($("#cCleans"), {
+  drawChart($("#cCleans"), Object.assign({
     type: "bar", aria: "Günlük temizlik döngüsü", empty: "Temizlik kaydı yok.",
     points: byDay(d.cleans).map(r => ({x: dmy(r.k), y: r.v, full: r.k})),
     tip: p => `<b>${p.y}</b> döngü`,
-  });
+  }, A));
 
-  const first = d.visits[0] || d.cleans[0];
-  $("#foot").textContent = first
-    ? `${dmy(first.ts)} tarihinden beri kayıtta · POOPY NANO 3, yerel ağdan okunuyor`
-    : "POOPY NANO 3, yerel ağdan okunuyor";
+  const f = d.visits[0] || d.cleans[0];
+  $("#foot").textContent = f
+    ? `${dmy(f.ts)} tarihinden beri kayıtta · POOPY NANO 3`
+    : "POOPY NANO 3";
+  drawn = true;
 }
 
+function paintWhen() {
+  const last = LAST && LAST.visits[LAST.visits.length - 1];
+  if (!last) { $("#when").textContent = "henüz ziyaret yok"; return; }
+  const io = last.parts > 1
+    ? `<span class="inout"><b>${last.parts}</b> girişli · ${fmtS(last.secs)}</span>`
+    : `<span class="inout">${fmtS(last.secs)}</span>`;
+  $("#when").innerHTML = `son ziyaret ${ago(last.end || last.ts)}${io}`;
+}
+
+let lastJSON = null;
 async function tick() {
-  try { render(await (await fetch("api/data.json", {cache: "no-store"})).json()); }
-  catch { $("#status").textContent = "bağlantı yok"; $("#dot").className = "dot dot--bad"; }
+  try {
+    const txt = await (await fetch("api/data.json", {cache: "no-store"})).text();
+    if (txt !== lastJSON) { lastJSON = txt; render(JSON.parse(txt)); }
+    else paintWhen();
+  } catch (e) { /* çevrimdışıyken son hal ekranda kalsın */ }
 }
 tick(); setInterval(tick, 10000);
+
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}), {rootMargin: "0px 0px -60px 0px"});
+document.querySelectorAll(".reveal").forEach(n => io.observe(n));
+
 let rt; addEventListener("resize", () => {
-  clearTimeout(rt); rt = setTimeout(() => LAST && render(LAST), 150);
+  clearTimeout(rt); rt = setTimeout(() => { if (LAST) { drawn = true; render(LAST); } }, 150);
 });
-</script>
-<script>
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
 </body>

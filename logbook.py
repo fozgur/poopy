@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """POOPY logbook: derives visits/cleans from the raw DPS event log and serves
 a small web UI locally. poll.py (cloud) and watch.py (LAN) are the writers."""
-import http.server, json, os, socketserver
+import datetime, http.server, json, os, socketserver
 from itertools import groupby
 
 EVENTS, PORT = "events.jsonl", 8420
@@ -16,6 +16,11 @@ NAMES = {
 # ponytail: dp6 is a raw load-cell reading; the app's own kg figure is wrong, so
 # don't trust the vendor scaling. Tune these against a known weight.
 W_SCALE, W_OFFSET = 0.1, 0.0
+
+# ponytail: Sütlaç girip çıkıp giriyor. Bu aralıktan yakın iki giriş tek ziyaret
+# sayılır, süreleri toplanır. Saniye — davranış değişirse tek yerden ayarla.
+# 4 dakika: 2 dakikayla bazı girdili çıktılı seriler ayrı ziyaret olarak kalıyordu.
+MERGE_GAP = 240
 
 def rows():
     if not os.path.exists(EVENTS):
@@ -68,6 +73,28 @@ def derive(evs):
     return visits, cleans, weights
 
 
+def sessions(visits, gap=MERGE_GAP):
+    """Ard arda gelen girişleri tek ziyarete indirger: süreler toplanır,
+    kaç giriş olduğu `parts` alanında durur."""
+    out = []
+    for v in visits:
+        t = datetime.datetime.fromisoformat(v["ts"])
+        if out and (t - out[-1]["_t"]).total_seconds() <= gap:
+            s = out[-1]
+            s["parts"] += 1
+            s["secs"] = (s["secs"] or 0) + (v["secs"] or 0)
+            s["end"], s["_t"] = v["ts"], t
+            if v["kg"]:
+                s["_kg"].append(v["kg"])
+        else:
+            out.append({"ts": v["ts"], "end": v["ts"], "_t": t, "parts": 1,
+                        "secs": v["secs"], "_kg": [v["kg"]] if v["kg"] else []})
+    for s in out:
+        del s["_t"]
+        s["kg"] = median(s.pop("_kg"))
+    return out
+
+
 def median(xs):
     xs = sorted(xs)
     if not xs:
@@ -86,7 +113,9 @@ def payload():
         cur[e["dp"]] = e["new"]
     fault = cur.get(22) or 0
     recent = [w["kg"] for w in weights[-12:]]
-    done = [v for v in visits if v["secs"]]
+    sess = sessions(visits)
+    today = datetime.date.today().isoformat()
+    done = [s["secs"] for s in sess if s["secs"]]
     return {
         "device": "POOPY NANO 3",
         "now": {
@@ -94,12 +123,15 @@ def payload():
             # ponytail: a single reading swings 1.0-3.2 kg for the same cat, so the
             # headline figure is a median. Raw points still show in the chart.
             "weight_kg": median(recent),
-            "visits_today": cur.get(7), "last_secs": cur.get(8),
+            # arayüzün tamamı birleştirilmiş ziyaret üzerine kurulu; cihazın kendi
+            # dp7 sayacı girip çıkmaları ayrı ayrı sayıyor.
+            "visits_today": sum(1 for s in sess if s["ts"][:10] == today),
             "clean_count": cur.get(124),
-            "median_secs": median([v["secs"] for v in done[-20:]]),
+            "median_secs": median(done[-20:]),
+            "merge_gap": MERGE_GAP,
             "faults": [f for i, f in enumerate(FAULTS) if fault >> i & 1],
         },
-        "visits": visits, "cleans": cleans, "weights": weights,
+        "visits": sess, "cleans": cleans, "weights": weights,
         "n_events": len(evs),
     }
 
