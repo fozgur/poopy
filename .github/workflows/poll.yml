@@ -1,7 +1,7 @@
 name: poll
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/6 * * * *"   # 10/saat = GitHub Pages build limitinin tamamı
   workflow_dispatch:
 
 permissions:
