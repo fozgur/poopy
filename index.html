@@ -40,6 +40,16 @@ header{position:sticky;top:0;z-index:30;padding:14px var(--gut);
   transition:transform .45s var(--ease)}
 @media (hover:hover){.bar img:hover{transform:rotate(-8deg) scale(1.08)}}
 .bar .nm{font-weight:750;font-size:19px;letter-spacing:-.5px}
+.rf{margin-left:auto;border:0;cursor:pointer;width:42px;height:42px;
+  border-radius:9999px;background:var(--card);color:var(--muted);
+  box-shadow:var(--shadow);display:grid;place-items:center;
+  font:inherit;transition:transform .45s var(--ease)}
+.rf:disabled{cursor:progress}
+.rf svg{width:20px;height:20px}
+.rf[data-busy] svg{animation:spin .9s linear infinite}
+@media (hover:hover){.rf:hover{transform:rotate(-30deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.rf,.rf[data-busy] svg{transition:none;animation:none}}
 
 .alert{background:#FBE3DD;color:#8C2A18;border-radius:22px;padding:16px 22px;
   margin-top:20px;font-weight:700;box-shadow:var(--shadow)}
@@ -144,6 +154,12 @@ footer{text-align:center;color:var(--muted);font-size:13px;font-weight:550;
 <header><div class="bar">
   <img src="favicon.png" alt="Sütlaç">
   <span class="nm">Sütlaç Poopy</span>
+  <button class="rf" id="refresh" title="Yenile" aria-label="Verileri yenile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 11a8 8 0 1 0-.7 4.5"/><path d="M20 4v7h-7"/>
+    </svg>
+  </button>
 </div></header>
 
 <div class="wrap">
@@ -417,6 +433,15 @@ tick();
 // iOS arka planda timer'ı zaten donduruyor.
 setInterval(tick, 60000);
 addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
+
+$("#refresh").addEventListener("click", async e => {
+  const b = e.currentTarget;
+  b.dataset.busy = "1"; b.disabled = true;
+  // ponytail: bulutu tetikleyemiyoruz (secret'lar Actions'ta), api/data.json'ı
+  // cache'siz yeniden çekiyoruz. Buton en az 600 ms dönsün ki tıklama hissedilsin.
+  await Promise.all([tick(), new Promise(r => setTimeout(r, 600))]);
+  delete b.dataset.busy; b.disabled = false;
+});
 
 const io = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
