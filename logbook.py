@@ -127,29 +127,45 @@ def median(xs):
     return xs[m] if len(xs) % 2 else (xs[m - 1] + xs[m]) / 2
 
 
-def alerts(sess, evs, now=None):
-    """Kural bazlı sağlık kontrolü. Her kural gözlenen normalin dışına çıkınca
-    yanar; yanan kural yoksa her şey yolunda demektir."""
+def insan(saat):
+    return f"{saat * 60:.0f} dk önce" if saat < 1 else f"{int(saat)} sa önce"
+
+
+def checks(sess, evs, now=None):
+    """Her kuralı sonucuyla birlikte döndürür: yananı uyarı, yanmayanı
+    'şunu kontrol ettim, normal' satırı. Arayüz ikisini de gösteriyor."""
     now = now or datetime.datetime.now()
     ago = lambda ts: (now - datetime.datetime.fromisoformat(ts)).total_seconds() / 3600
     out, last = [], sess[-1] if sess else None
     poops = [s for s in sess if s["kind"] == "kaka"]
     today = sum(1 for s in sess if s["ts"][:10] == now.date().isoformat())
+    add = lambda bad, lvl, kotu, iyi: out.append(
+        {"ok": not bad, "level": lvl, "text": kotu if bad else iyi})
 
-    if last and ago(last["end"]) > NO_VISIT_H:
-        out.append(("acil", f"{ago(last['end']):.0f} saattir kumluğa hiç girmedi"))
-    if poops and ago(poops[-1]["end"]) > NO_POOP_H:
-        out.append(("uyari", f"{ago(poops[-1]['end']):.0f} saattir kaka yok"))
-    if today >= BUSY_DAY:
-        out.append(("acil", f"bugün {today} ziyaret — idrar yolu sorunu olabilir"))
-    if last and last["secs"] and last["secs"] > STRAIN_SECS:
-        out.append(("uyari", f"son ziyaret {last['secs']} sn sürdü, zorlanıyor olabilir"))
-    if last and last["kind"] == "kaka" and last["parts"] >= RESTLESS:
-        out.append(("uyari", f"son kakada {last['parts']} kez girip çıktı"))
-    # dp7 her gece 23:47'de sıfırlanıyor, yani günde en az bir olay garanti.
-    if evs and ago(evs[-1]["ts"]) > SILENT_H:
-        out.append(("uyari", f"cihazdan {ago(evs[-1]['ts']):.0f} saattir haber yok"))
-    return [{"level": l, "text": t} for l, t in out]
+    if last:
+        h = ago(last["end"])
+        add(h > NO_VISIT_H, "acil", f"{h:.0f} saattir kumluğa hiç girmedi",
+            f"son ziyaret {insan(h)}")
+    if poops:
+        h = ago(poops[-1]["end"])
+        add(h > NO_POOP_H, "uyari", f"{h:.0f} saattir kaka yok",
+            f"son kaka {insan(h)}")
+    add(today >= BUSY_DAY, "acil", f"bugün {today} ziyaret — idrar yolu sorunu olabilir",
+        f"bugün {today} ziyaret, normal aralıkta")
+    if last and last["secs"]:
+        add(last["secs"] > STRAIN_SECS, "uyari",
+            f"son ziyaret {last['secs']} sn sürdü, zorlanıyor olabilir",
+            f"son ziyaret {last['secs']} sn, zorlanma yok")
+    if last and last["kind"] == "kaka":
+        add(last["parts"] >= RESTLESS, "uyari",
+            f"son kakada {last['parts']} kez girip çıktı",
+            f"son kakada {last['parts']} giriş, huzursuzluk yok")
+    if evs:
+        # dp7 her gece 23:47'de sıfırlanıyor, yani günde en az bir olay garanti.
+        h = ago(evs[-1]["ts"])
+        add(h > SILENT_H, "uyari", f"cihazdan {h:.0f} saattir haber yok",
+            f"cihazdan son haber {insan(h)}")
+    return out
 
 
 FAULTS = ["E01", "E02", "E03", "E04", "E05"]
@@ -166,7 +182,8 @@ def payload():
     today = datetime.date.today().isoformat()
     done = [s["secs"] for s in sess if s["secs"]]
     bugun = [s for s in sess if s["ts"][:10] == today]
-    al = alerts(sess, evs)
+    kont = checks(sess, evs)
+    al = [c for c in kont if not c["ok"]]
     return {
         "device": "POOPY NANO 3",
         "now": {
@@ -187,6 +204,8 @@ def payload():
             "pee_today": sum(1 for s in bugun if s["kind"] == "çiş"),
             "poop_today": sum(1 for s in bugun if s["kind"] == "kaka"),
             "poop_secs": POOP_SECS,
+            "today": today,
+            "checks": kont,
             "alerts": al,
             "ok": not al,
         },

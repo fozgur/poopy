@@ -101,14 +101,30 @@ header{position:sticky;top:0;z-index:30;padding:14px var(--gut);
 .state.acil{background:#FBE3DD;color:#8C2A18}
 .state ul{margin:7px 0 0;padding-left:17px;font-weight:650;font-size:15px}
 .state li+li{margin-top:3px}
-.tally{background:var(--card);border-radius:22px;padding:20px 22px;
-  box-shadow:var(--shadow);display:flex;align-items:flex-start;gap:14px}
-.tally .n{min-width:68px}
+.tally{display:flex;gap:14px}
+.tile{flex:1;min-width:0;border-radius:22px;padding:18px 20px;position:relative;
+  overflow:hidden;box-shadow:var(--shadow);color:var(--espresso);
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+@media (hover:hover){.tile:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}}
+.tile.pee{background:linear-gradient(158deg,#FFF3D8,#F7DFA6)}
+.tile.poo{background:linear-gradient(158deg,#F3E4D3,#DEC4A6)}
+.tile .ico{width:40px;height:40px;border-radius:9999px;display:grid;place-items:center;
+  background:rgba(255,255,255,.62);box-shadow:0 4px 12px rgba(96,62,26,.12)}
+.tile .ico svg{width:23px;height:23px;fill:currentColor;display:block}
+.tile.pee .ico{color:#C98A12}
+.tile.poo .ico{color:#7A5334}
+.tile .v{margin-top:12px;font-weight:800;font-size:38px;letter-spacing:-1.5px;
+  line-height:1;font-variant-numeric:tabular-nums}
+.tile .k{margin-top:3px;font-size:14px;font-weight:700;opacity:.62}
+.tile .tm{margin-top:8px;font-size:13px;font-weight:700;opacity:.8;
+  line-height:1.4;word-break:break-word}
+.tile .bg{position:absolute;right:-16px;bottom:-22px;width:104px;height:104px;
+  opacity:.16;fill:currentColor;pointer-events:none}
+.tile.pee .bg{color:#C98A12}
+.tile.poo .bg{color:#7A5334}
 .tally .v{font-weight:800;font-size:36px;letter-spacing:-1.4px;line-height:1.05;
   font-variant-numeric:tabular-nums}
 .tally .k{margin-top:4px;color:var(--muted);font-size:14px;font-weight:600}
-.tally .note{margin-left:auto;max-width:19ch;color:var(--muted);font-size:12px;
-  font-weight:600;line-height:1.35;text-align:right;align-self:center}
 
 /* ---- chart cards ---- */
 .card{background:var(--card);border-radius:30px;padding:34px;margin-top:20px;
@@ -146,6 +162,9 @@ footer{text-align:center;color:var(--muted);font-size:13px;font-weight:550;
     transition:opacity .7s var(--ease),transform .7s var(--ease)}
   @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   .cat{animation:floaty 6.5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-6deg)}}
+  .tile .ico svg{animation:bob 4.5s ease-in-out infinite}
+  .tile.poo .ico svg{animation-delay:.9s}
   @keyframes grow{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
   .anim .bar{transform-box:fill-box;transform-origin:50% 100%;
     animation:grow .75s var(--ease) backwards}
@@ -220,6 +239,20 @@ const fmtS = s => s == null ? "–" : s < 60 ? s + " sn"
 const hhmm = t => { const d = new Date(t); return d2(d.getHours()) + ":" + d2(d.getMinutes()); };
 const dmy = t => { const d = new Date(t); return d2(d.getDate()) + "." + d2(d.getMonth() + 1); };
 const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// damla ve üç katlı yığın: emoji yerine kendi çizimimiz, tema rengine uyuyor
+const ICO = {
+  pee: `<path d="M12 2.6c3.7 4.3 6.1 7.4 6.1 10.4a6.1 6.1 0 0 1-12.2 0c0-3 2.4-6.1 6.1-10.4z"/>`,
+  poo: `<ellipse cx="12" cy="18.4" rx="7.5" ry="3.4"/><ellipse cx="12" cy="13.4" rx="5.5" ry="3.1"/>`
+     + `<ellipse cx="12" cy="8.9" rx="3.5" ry="2.5"/>`
+     + `<path d="M12 6.4c0-1.8 1.4-2.2 1.1-4.1" fill="none" stroke="currentColor"`
+     + ` stroke-width="1.7" stroke-linecap="round"/>`,
+};
+const svg = (k, cls) => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+const tile = (k, ad, n, tm) => `<div class="tile ${k}">
+  <div class="ico">${svg(k, "")}</div>
+  <div class="v">${n}</div><div class="k">${ad}</div><div class="tm">${tm}</div>
+  ${svg(k, "bg")}</div>`;
 
 function ago(ts) {
   const s = (Date.now() - new Date(ts)) / 1000;
@@ -398,15 +431,19 @@ function render(d) {
    .map(([a, b]) => `<div class="sticker"><div class="v">${a}</div><div class="k">${b}</div></div>`).join("");
 
   const bad = now.alerts.find(a => a.level === "acil") || now.alerts[0];
+  const li = xs => `<ul>${xs.map(t => `<li>${t}</li>`).join("")}</ul>`;
+  const bugun = d.visits.filter(v => v.ts.slice(0, 10) === now.today);
+  const saat = k => {
+    const xs = bugun.filter(v => v.kind === k).map(v => hhmm(v.ts));
+    return xs.length ? xs.join(" · ") : "–";
+  };
   $("#health").innerHTML = (bad
-    ? `<div class="state ${bad.level}"><span class="dot"></span><div>Dikkat
-         <ul>${now.alerts.map(a => `<li>${a.text}</li>`).join("")}</ul></div></div>`
-    : `<div class="state ok"><span class="dot"></span>Her şey yolunda</div>`)
-    + `<div class="tally">
-         <div class="n"><div class="v">${now.pee_today}</div><div class="k">çiş</div></div>
-         <div class="n"><div class="v">${now.poop_today}</div><div class="k">kaka</div></div>
-         <div class="note">bugün · ${now.poop_secs} sn üstü kaka, tahmini</div>
-       </div>`;
+    ? `<div class="state ${bad.level}"><span class="dot"></span>
+         <div>Dikkat${li(now.alerts.map(a => a.text))}</div></div>`
+    : `<div class="state ok"><span class="dot"></span>
+         <div>Her şey yolunda${li(now.checks.map(c => c.text))}</div></div>`)
+    + `<div class="tally">${tile("pee", "çiş", now.pee_today, saat("çiş"))}`
+    + `${tile("poo", "kaka", now.poop_today, saat("kaka"))}</div>`;
 
   const A = {animate: first};
   drawChart($("#cVisits"), Object.assign({
