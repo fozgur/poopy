@@ -29,3 +29,25 @@ if __name__ == "__main__":
     test_duration_lands_on_its_own_visit()
     test_short_stay_flagged_after_merge()
     print("ok")
+
+def test_kind_and_merge():
+    # 45 sn sınırda: çiş; üstü kaka
+    evs = [ev("2026-09-18T08:00:00", 7, 0, 1), ev("2026-09-18T08:00:00", 8, 0, 45),
+           ev("2026-09-18T12:00:00", 7, 1, 2), ev("2026-09-18T12:00:00", 8, 45, 46)]
+    a, b = logbook.sessions(logbook.derive(evs)[0])
+    assert (a["kind"], b["kind"]) == ("çiş", "kaka"), (a["kind"], b["kind"])
+    # girdili çıktılı seri tek ziyaret, süreler toplanınca kaka tarafına geçiyor
+    evs = [ev("2026-09-18T08:00:00", 7, 0, 1), ev("2026-09-18T08:00:00", 8, 0, 30),
+           ev("2026-09-18T08:02:00", 7, 1, 2), ev("2026-09-18T08:02:00", 8, 30, 40)]
+    s, = logbook.sessions(logbook.derive(evs)[0])
+    assert s["parts"] == 2 and s["secs"] == 70 and s["kind"] == "kaka"
+
+def test_rules_fire_only_when_abnormal():
+    import datetime
+    evs = [ev("2026-09-18T09:00:00", 7, 0, 1), ev("2026-09-18T09:00:00", 8, 0, 100)]
+    sess = logbook.sessions(logbook.derive(evs)[0])
+    now = datetime.datetime.fromisoformat("2026-09-18T10:00:00")
+    assert logbook.alerts(sess, evs, now) == []          # 1 saat sonra: sessiz
+    now = datetime.datetime.fromisoformat("2026-09-20T10:00:00")   # 49 saat sonra
+    fired = {a["level"] for a in logbook.alerts(sess, evs, now)}
+    assert fired == {"acil", "uyari"}, fired             # ziyaret yok + kaka yok + cihaz sessiz

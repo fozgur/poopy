@@ -27,6 +27,16 @@ MERGE_GAP = 240
 # 161 olayda en kısa gerçek ziyaret 13 sn; eşik davranış verisi biriktikçe oynar.
 SHORT_STAY = 10
 
+# ponytail: bu süreden uzunu kaka, kısası çiş. 24 ziyarette 46-66 sn bandı
+# tamamen boş ve 8 günün 8'inde de tam bir uzun ziyaret var (7'si 09:00-12:00),
+# yani eşik boşluğa oturuyor. Etiketli veri birikince tek yerden oynatılır.
+POOP_SECS = 45
+
+# ponytail: uyarı eşikleri 9 günlük gözlemin en uç değerinin üstünde — bugünkü
+# veride hiçbiri yanmıyor. Yanlış alarm gelirse buradan gevşetilir.
+NO_POOP_H, NO_VISIT_H, SILENT_H = 40, 24, 30    # saat  (gözlenen: 33 / 19 / -)
+BUSY_DAY, STRAIN_SECS, RESTLESS = 8, 240, 4     # adet / sn / giriş (gözlenen: 4 / 170 / 4)
+
 def read_jsonl(path):
     if not os.path.exists(path):
         return []
@@ -104,6 +114,8 @@ kaç giriş olduğu `parts` alanında durur."""
         del s["_t"]
         s["kg"] = median(s.pop("_kg"))
         s["short"] = s["secs"] is not None and s["secs"] < SHORT_STAY
+        s["kind"] = None if s["secs"] is None else (
+            "kaka" if s["secs"] > POOP_SECS else "çiş")
     return out
 
 
@@ -113,6 +125,31 @@ def median(xs):
         return None
     m = len(xs) // 2
     return xs[m] if len(xs) % 2 else (xs[m - 1] + xs[m]) / 2
+
+
+def alerts(sess, evs, now=None):
+    """Kural bazlı sağlık kontrolü. Her kural gözlenen normalin dışına çıkınca
+    yanar; yanan kural yoksa her şey yolunda demektir."""
+    now = now or datetime.datetime.now()
+    ago = lambda ts: (now - datetime.datetime.fromisoformat(ts)).total_seconds() / 3600
+    out, last = [], sess[-1] if sess else None
+    poops = [s for s in sess if s["kind"] == "kaka"]
+    today = sum(1 for s in sess if s["ts"][:10] == now.date().isoformat())
+
+    if last and ago(last["end"]) > NO_VISIT_H:
+        out.append(("acil", f"{ago(last['end']):.0f} saattir kumluğa hiç girmedi"))
+    if poops and ago(poops[-1]["end"]) > NO_POOP_H:
+        out.append(("uyari", f"{ago(poops[-1]['end']):.0f} saattir kaka yok"))
+    if today >= BUSY_DAY:
+        out.append(("acil", f"bugün {today} ziyaret — idrar yolu sorunu olabilir"))
+    if last and last["secs"] and last["secs"] > STRAIN_SECS:
+        out.append(("uyari", f"son ziyaret {last['secs']} sn sürdü, zorlanıyor olabilir"))
+    if last and last["kind"] == "kaka" and last["parts"] >= RESTLESS:
+        out.append(("uyari", f"son kakada {last['parts']} kez girip çıktı"))
+    # dp7 her gece 23:47'de sıfırlanıyor, yani günde en az bir olay garanti.
+    if evs and ago(evs[-1]["ts"]) > SILENT_H:
+        out.append(("uyari", f"cihazdan {ago(evs[-1]['ts']):.0f} saattir haber yok"))
+    return [{"level": l, "text": t} for l, t in out]
 
 
 FAULTS = ["E01", "E02", "E03", "E04", "E05"]
@@ -128,6 +165,8 @@ def payload():
     sess = sessions(visits)
     today = datetime.date.today().isoformat()
     done = [s["secs"] for s in sess if s["secs"]]
+    bugun = [s for s in sess if s["ts"][:10] == today]
+    al = alerts(sess, evs)
     return {
         "device": "POOPY NANO 3",
         "now": {
@@ -143,6 +182,13 @@ def payload():
             "merge_gap": MERGE_GAP,
             "faults": [f for i, f in enumerate(FAULTS) if fault >> i & 1],
             "short_stays": sum(1 for s in sess if s["short"]),
+            # girdili çıktılı seriler sessions() içinde zaten tek ziyarete indi,
+            # bu sayımlar da o birleşik ziyaretler üzerinden.
+            "pee_today": sum(1 for s in bugun if s["kind"] == "çiş"),
+            "poop_today": sum(1 for s in bugun if s["kind"] == "kaka"),
+            "poop_secs": POOP_SECS,
+            "alerts": al,
+            "ok": not al,
         },
         "visits": sess, "cleans": cleans, "weights": weights,
         "n_events": len(evs),

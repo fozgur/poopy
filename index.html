@@ -89,6 +89,27 @@ header{position:sticky;top:0;z-index:30;padding:14px var(--gut);
   font-variant-numeric:tabular-nums}
 .sticker .k{margin-top:4px;color:var(--muted);font-size:14px;font-weight:600}
 
+/* ---- sağlık durumu + günlük sayaç ---- */
+.health{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));
+  gap:14px;margin-top:14px}
+.state{border-radius:22px;padding:20px 22px;box-shadow:var(--shadow);
+  display:flex;align-items:flex-start;gap:12px;font-weight:750}
+.state .dot{width:12px;height:12px;border-radius:9999px;background:currentColor;
+  flex:none;margin-top:6px}
+.state.ok{background:#E9F0D8;color:#4C5D19}
+.state.uyari{background:#FBEFDC;color:#8A5A12}
+.state.acil{background:#FBE3DD;color:#8C2A18}
+.state ul{margin:7px 0 0;padding-left:17px;font-weight:650;font-size:15px}
+.state li+li{margin-top:3px}
+.tally{background:var(--card);border-radius:22px;padding:20px 22px;
+  box-shadow:var(--shadow);display:flex;align-items:flex-start;gap:14px}
+.tally .n{min-width:68px}
+.tally .v{font-weight:800;font-size:36px;letter-spacing:-1.4px;line-height:1.05;
+  font-variant-numeric:tabular-nums}
+.tally .k{margin-top:4px;color:var(--muted);font-size:14px;font-weight:600}
+.tally .note{margin-left:auto;max-width:19ch;color:var(--muted);font-size:12px;
+  font-weight:600;line-height:1.35;text-align:right;align-self:center}
+
 /* ---- chart cards ---- */
 .card{background:var(--card);border-radius:30px;padding:34px;margin-top:20px;
   box-shadow:var(--shadow)}
@@ -173,6 +194,8 @@ footer{text-align:center;color:var(--muted);font-size:13px;font-weight:550;
   </div>
 
   <div class="stickers" id="stickers"></div>
+
+  <div class="health" id="health"></div>
 
   <div class="card reveal"><div class="head"><h2>Günde kaç kez?</h2></div>
     <div class="chart" id="cVisits"></div></div>
@@ -373,6 +396,17 @@ function render(d) {
     [d.visits.length, "toplam ziyaret"],
   ].concat(now.short_stays ? [[now.short_stays, "girip çıkmış (<10 sn)"]] : [])
    .map(([a, b]) => `<div class="sticker"><div class="v">${a}</div><div class="k">${b}</div></div>`).join("");
+
+  const bad = now.alerts.find(a => a.level === "acil") || now.alerts[0];
+  $("#health").innerHTML = (bad
+    ? `<div class="state ${bad.level}"><span class="dot"></span><div>Dikkat
+         <ul>${now.alerts.map(a => `<li>${a.text}</li>`).join("")}</ul></div></div>`
+    : `<div class="state ok"><span class="dot"></span>Her şey yolunda</div>`)
+    + `<div class="tally">
+         <div class="n"><div class="v">${now.pee_today}</div><div class="k">çiş</div></div>
+         <div class="n"><div class="v">${now.poop_today}</div><div class="k">kaka</div></div>
+         <div class="note">bugün · ${now.poop_secs} sn üstü kaka, tahmini</div>
+       </div>`;
 
   const A = {animate: first};
   drawChart($("#cVisits"), Object.assign({
