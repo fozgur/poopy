@@ -229,3 +229,5 @@
 {"ts": "2026-09-19T00:48:44", "dp": 6, "name": "cat_weight", "old": 12, "new": 20}
 {"ts": "2026-09-19T00:48:44", "dp": 7, "name": "excretion_times_day", "old": 0, "new": 1}
 {"ts": "2026-09-19T00:48:44", "dp": 8, "name": "excretion_time_day", "old": 67, "new": 32}
+{"ts": "2026-09-19T00:58:39", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
+{"ts": "2026-09-19T01:00:41", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
