@@ -425,7 +425,6 @@ function render(d) {
 
   $("#stickers").innerHTML = [
     [fmtS(now.median_secs && Math.round(now.median_secs)), "medyan oyalanma"],
-    [now.weight_kg ? now.weight_kg.toFixed(1) + " kg" : "–", "medyan ağırlık"],
     [d.visits.length, "toplam ziyaret"],
   ].concat(now.short_stays ? [[now.short_stays, "girip çıkmış (<10 sn)"]] : [])
    .map(([a, b]) => `<div class="sticker"><div class="v">${a}</div><div class="k">${b}</div></div>`).join("");
