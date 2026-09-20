@@ -138,6 +138,7 @@ def checks(sess, evs, now=None):
     ago = lambda ts: (now - datetime.datetime.fromisoformat(ts)).total_seconds() / 3600
     out, last = [], sess[-1] if sess else None
     poops = [s for s in sess if s["kind"] == "kaka"]
+    pees = [s for s in sess if s["kind"] == "çiş"]
     today = sum(1 for s in sess if s["ts"][:10] == now.date().isoformat())
     add = lambda bad, lvl, kotu, iyi: out.append(
         {"ok": not bad, "level": lvl, "text": kotu if bad else iyi})
@@ -150,6 +151,9 @@ def checks(sess, evs, now=None):
         h = ago(poops[-1]["end"])
         add(h > NO_POOP_H, "uyari", f"{h:.0f} saattir kaka yok",
             f"son kaka {insan(h)}")
+    if pees:
+        h = ago(pees[-1]["end"])
+        out.append({"ok": True, "level": "info", "text": f"son çiş {insan(h)}"})
     add(today >= BUSY_DAY, "acil", f"bugün {today} ziyaret — idrar yolu sorunu olabilir",
         f"bugün {today} ziyaret, normal aralıkta")
     if last and last["secs"]:
