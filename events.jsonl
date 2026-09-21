@@ -261,3 +261,15 @@
 {"ts": "2026-09-21T01:18:50", "dp": 8, "name": "excretion_time_day", "old": 51, "new": 32}
 {"ts": "2026-09-21T01:28:45", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
 {"ts": "2026-09-21T01:30:48", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
+{"ts": "2026-09-21T09:01:00", "dp": 6, "name": "cat_weight", "old": 19, "new": 24}
+{"ts": "2026-09-21T09:01:00", "dp": 7, "name": "excretion_times_day", "old": 1, "new": 2}
+{"ts": "2026-09-21T09:01:00", "dp": 8, "name": "excretion_time_day", "old": 32, "new": 64}
+{"ts": "2026-09-21T09:02:42", "dp": 6, "name": "cat_weight", "old": 24, "new": 16}
+{"ts": "2026-09-21T09:02:42", "dp": 7, "name": "excretion_times_day", "old": 2, "new": 3}
+{"ts": "2026-09-21T09:02:42", "dp": 8, "name": "excretion_time_day", "old": 64, "new": 40}
+{"ts": "2026-09-21T09:12:37", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
+{"ts": "2026-09-21T09:14:40", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
+{"ts": "2026-09-21T09:53:11", "dp": 7, "name": "excretion_times_day", "old": 3, "new": 4}
+{"ts": "2026-09-21T09:53:12", "dp": 6, "name": "cat_weight", "old": 16, "new": 22}
+{"ts": "2026-09-21T09:53:12", "dp": 8, "name": "excretion_time_day", "old": 40, "new": 29}
+{"ts": "2026-09-21T10:03:07", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
