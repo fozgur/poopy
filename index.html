@@ -101,11 +101,21 @@ header{position:sticky;top:0;z-index:30;padding:14px var(--gut);
 .state.acil{background:#FBE3DD;color:#8C2A18}
 .state ul{margin:7px 0 0;padding-left:17px;font-weight:650;font-size:15px}
 .state li+li{margin-top:3px}
-.tally{display:flex;gap:14px}
+.tally{background:var(--card);border-radius:22px;padding:14px;box-shadow:var(--shadow);
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+@media (hover:hover){.tally:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}}
+.dayhead{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:2px 6px 12px}
+.dayhead .dl{font-weight:750;font-size:15px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.nav{border:0;padding:0;cursor:pointer;width:34px;height:34px;border-radius:9999px;
+  background:var(--card-2);color:var(--orange);display:grid;place-items:center}
+.nav svg{width:18px;height:18px}
+.nav:disabled{opacity:.28;cursor:default}
+.tiles{display:flex;gap:14px}
 .tile{flex:1;min-width:0;border-radius:22px;padding:18px 20px;position:relative;
   overflow:hidden;box-shadow:var(--shadow);color:var(--espresso);
   transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
-@media (hover:hover){.tile:hover{transform:translateY(-5px);box-shadow:var(--shadow-lift)}}
 .tile.pee{background:linear-gradient(158deg,#FFF3D8,#F7DFA6)}
 .tile.poo{background:linear-gradient(158deg,#F3E4D3,#DEC4A6)}
 .tile .ico{width:40px;height:40px;border-radius:9999px;display:grid;place-items:center;
@@ -431,18 +441,13 @@ function render(d) {
 
   const bad = now.alerts.find(a => a.level === "acil") || now.alerts[0];
   const li = xs => `<ul>${xs.map(t => `<li>${t}</li>`).join("")}</ul>`;
-  const bugun = d.visits.filter(v => v.ts.slice(0, 10) === now.today);
-  const saat = k => {
-    const xs = bugun.filter(v => v.kind === k).map(v => hhmm(v.ts));
-    return xs.length ? xs.join(" · ") : "–";
-  };
   $("#health").innerHTML = (bad
     ? `<div class="state ${bad.level}"><span class="dot"></span>
          <div>Dikkat${li(now.alerts.map(a => a.text))}</div></div>`
     : `<div class="state ok"><span class="dot"></span>
          <div>Her şey yolunda${li(now.checks.map(c => c.text))}</div></div>`)
-    + `<div class="tally">${tile("pee", "çiş", now.pee_today, saat("çiş"))}`
-    + `${tile("poo", "kaka", now.poop_today, saat("kaka"))}</div>`;
+    + `<div class="tally" id="tally"></div>`;
+  paintTally();
 
   const A = {animate: first};
   drawChart($("#cVisits"), Object.assign({
@@ -479,6 +484,47 @@ function render(d) {
     : "POOPY NANO 3";
   drawn = true;
 }
+
+// gün gezintisi: 0 = bugün, 1 = dün... sayımlar d.visits'ten, arka uçtaki
+// pee_today/poop_today ile aynı birleştirilmiş ziyaretler üzerinden.
+let dayOff = 0;
+const chev = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+  aria-hidden="true"><path d="${d}"/></svg>`;
+
+function paintTally() {
+  const d = LAST; if (!d) return;
+  const t = new Date(d.now.today + "T00:00");
+  const ilk = d.visits[0] && d.visits[0].ts.slice(0, 10);
+  const maxOff = ilk ? Math.round((t - new Date(ilk + "T00:00")) / 864e5) : 0;
+  dayOff = Math.min(Math.max(dayOff, 0), Math.max(maxOff, 0));
+  t.setDate(t.getDate() - dayOff);
+  const key = t.getFullYear() + "-" + d2(t.getMonth() + 1) + "-" + d2(t.getDate());
+  const gun = d.visits.filter(v => v.ts.slice(0, 10) === key);
+  const say = k => gun.filter(v => v.kind === k).length;
+  const saat = k => {
+    const xs = gun.filter(v => v.kind === k).map(v => hhmm(v.ts));
+    return xs.length ? xs.join(" · ") : "–";
+  };
+  const gt = dmy(key + "T00:00");
+  const ad = dayOff === 0 ? "bugün · " + gt : dayOff === 1 ? "dün · " + gt : gt;
+  $("#tally").innerHTML = `<div class="dayhead">
+      <button class="nav" data-day="1" aria-label="Önceki gün"
+        ${dayOff >= maxOff ? "disabled" : ""}>${chev("M15 5l-7 7 7 7")}</button>
+      <span class="dl">${ad}</span>
+      <button class="nav" data-day="-1" aria-label="Sonraki gün"
+        ${dayOff <= 0 ? "disabled" : ""}>${chev("M9 5l7 7-7 7")}</button>
+    </div>
+    <div class="tiles">${tile("pee", "çiş", say("çiş"), saat("çiş"))}
+      ${tile("poo", "kaka", say("kaka"), saat("kaka"))}</div>`;
+}
+
+$("#health").addEventListener("click", e => {
+  const b = e.target.closest("[data-day]");
+  if (!b) return;
+  dayOff += +b.dataset.day;
+  paintTally();
+});
 
 function paintWhen() {
   const last = LAST && LAST.visits[LAST.visits.length - 1];
