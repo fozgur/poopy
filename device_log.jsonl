@@ -335,3 +335,10 @@
 {"ts": "2026-09-23T13:13:23", "ms": 1790162003000, "event": 8, "name": "signal", "value": "-69"}
 {"ts": "2026-09-23T14:13:23", "ms": 1790165603000, "event": 8, "name": "signal", "value": "-70"}
 {"ts": "2026-09-23T15:13:23", "ms": 1790169203000, "event": 8, "name": "signal", "value": "-70"}
+{"ts": "2026-09-23T16:13:23", "ms": 1790172803000, "event": 8, "name": "signal", "value": "-72"}
+{"ts": "2026-09-23T16:37:28", "ms": 1790174248517, "event": 1, "name": "online", "value": null}
+{"ts": "2026-09-23T16:37:42", "ms": 1790174262634, "event": 9, "name": "restart", "value": null}
+{"ts": "2026-09-23T17:37:22", "ms": 1790177842000, "event": 8, "name": "signal", "value": "-75"}
+{"ts": "2026-09-23T18:37:22", "ms": 1790181442000, "event": 8, "name": "signal", "value": "-72"}
+{"ts": "2026-09-23T19:06:25", "ms": 1790183185068, "event": 1, "name": "online", "value": null}
+{"ts": "2026-09-23T19:06:37", "ms": 1790183197043, "event": 9, "name": "restart", "value": null}
