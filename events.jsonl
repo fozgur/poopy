@@ -300,3 +300,6 @@
 {"ts": "2026-09-23T09:28:44", "dp": 6, "name": "cat_weight", "old": 11, "new": 20}
 {"ts": "2026-09-23T09:28:44", "dp": 7, "name": "excretion_times_day", "old": 2, "new": 3}
 {"ts": "2026-09-23T09:28:44", "dp": 8, "name": "excretion_time_day", "old": 42, "new": 49}
+{"ts": "2026-09-23T09:30:36", "dp": 6, "name": "cat_weight", "old": 20, "new": 18}
+{"ts": "2026-09-23T09:30:36", "dp": 7, "name": "excretion_times_day", "old": 3, "new": 4}
+{"ts": "2026-09-23T09:30:36", "dp": 8, "name": "excretion_time_day", "old": 49, "new": 27}
