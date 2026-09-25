@@ -376,3 +376,6 @@
 {"ts": "2026-09-25T21:14:31", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
 {"ts": "2026-09-25T21:16:35", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
 {"ts": "2026-09-25T23:46:47", "dp": 7, "name": "excretion_times_day", "old": 4, "new": 0}
+{"ts": "2026-09-26T00:15:14", "dp": 6, "name": "cat_weight", "old": 20, "new": 17}
+{"ts": "2026-09-26T00:15:14", "dp": 7, "name": "excretion_times_day", "old": 0, "new": 1}
+{"ts": "2026-09-26T00:15:14", "dp": 8, "name": "excretion_time_day", "old": 33, "new": 95}
