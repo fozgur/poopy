@@ -396,3 +396,4 @@
 {"ts": "2026-09-26T20:12:21", "dp": 7, "name": "excretion_times_day", "old": 4, "new": 5}
 {"ts": "2026-09-26T20:12:21", "dp": 8, "name": "excretion_time_day", "old": 51, "new": 74}
 {"ts": "2026-09-26T20:22:16", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
+{"ts": "2026-09-26T20:24:19", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
