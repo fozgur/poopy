@@ -655,3 +655,13 @@
 {"ts": "2026-10-09T08:07:49", "dp": 6, "name": "cat_weight", "old": 19, "new": 26}
 {"ts": "2026-10-09T08:17:43", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
 {"ts": "2026-10-09T08:19:46", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
+{"ts": "2026-10-09T19:56:41", "dp": 7, "name": "excretion_times_day", "old": 1, "new": 2}
+{"ts": "2026-10-09T19:56:41", "dp": 8, "name": "excretion_time_day", "old": 28, "new": 24}
+{"ts": "2026-10-09T19:59:00", "dp": 6, "name": "cat_weight", "old": 26, "new": 22}
+{"ts": "2026-10-09T19:59:00", "dp": 7, "name": "excretion_times_day", "old": 2, "new": 3}
+{"ts": "2026-10-09T19:59:00", "dp": 8, "name": "excretion_time_day", "old": 24, "new": 64}
+{"ts": "2026-10-09T20:01:10", "dp": 6, "name": "cat_weight", "old": 22, "new": 19}
+{"ts": "2026-10-09T20:01:10", "dp": 7, "name": "excretion_times_day", "old": 3, "new": 4}
+{"ts": "2026-10-09T20:01:10", "dp": 8, "name": "excretion_time_day", "old": 64, "new": 99}
+{"ts": "2026-10-09T20:11:05", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
+{"ts": "2026-10-09T20:13:08", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
