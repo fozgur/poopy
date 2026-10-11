@@ -700,3 +700,6 @@
 {"ts": "2026-10-11T11:43:21", "dp": 8, "name": "excretion_time_day", "old": 41, "new": 14}
 {"ts": "2026-10-11T11:53:20", "dp": 24, "name": "status", "old": "standly", "new": "clean"}
 {"ts": "2026-10-11T11:55:18", "dp": 24, "name": "status", "old": "clean", "new": "standly"}
+{"ts": "2026-10-11T21:02:40", "dp": 6, "name": "cat_weight", "old": 9, "new": 13}
+{"ts": "2026-10-11T21:02:40", "dp": 7, "name": "excretion_times_day", "old": 6, "new": 7}
+{"ts": "2026-10-11T21:02:40", "dp": 8, "name": "excretion_time_day", "old": 14, "new": 37}
